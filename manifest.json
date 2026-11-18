@@ -1,0 +1,92 @@
+{
+  "id": "/moi-dela-app",
+  "name": "Мои дела",
+  "short_name": "Мои дела",
+  "description": "Личный список дел с облачной синхронизацией",
+  "start_url": "./",
+  "scope": "./",
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Новая задача",
+      "short_name": "Новая",
+      "url": "./?app=tasks&add=1",
+      "icons": [
+        {
+          "src": "icon-tasks-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Мои дела",
+      "short_name": "Дела",
+      "url": "./?app=tasks",
+      "icons": [
+        {
+          "src": "icon-tasks-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Журнал",
+      "short_name": "Журнал",
+      "url": "./?app=journal",
+      "icons": [
+        {
+          "src": "icon-journal-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Питание",
+      "short_name": "Питание",
+      "url": "./?app=food",
+      "icons": [
+        {
+          "src": "icon-food-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

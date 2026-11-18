@@ -1,0 +1,37 @@
+name: ASR model (ru)
+on:
+  workflow_dispatch: {}
+  push:
+    paths: [".github/workflows/asr.yml"]
+permissions:
+  contents: write
+jobs:
+  asr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pack GigaAM v3 CTC punct (ru) + Silero VAD
+        run: |
+          mkdir -p out && cd out
+          curl -fsSL -o m.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16.tar.bz2"
+          mkdir x && tar xjf m.tar.bz2 -C x
+          d=$(ls -d x/*/ | head -1)
+          mkdir -p p && cp "$d/model.int8.onnx" "$d/tokens.txt" p/ && echo v3p > p/ver3
+          curl -fsSL -o p/silero_vad.onnx "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx"
+          (cd p && zip -qr9 ../asr-ru.zip .)
+          ls -la asr-ru.zip p
+      - name: Pack GigaAM v3 RNNT punct (ru) — точнее CTC (Android ver4 + браузер)
+        run: |
+          cd out
+          curl -fsSL -o r.tar.bz2 "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16.tar.bz2"
+          mkdir y && tar xjf r.tar.bz2 -C y
+          d=$(ls -d y/*/ | head -1)
+          mkdir -p q && cp "$d/encoder.int8.onnx" "$d/decoder.onnx" "$d/joiner.onnx" "$d/tokens.txt" q/ && echo rnnt > q/ver4
+          (cd q && zip -qr9 ../asr-ru-rnnt.zip .)
+          ls -la asr-ru-rnnt.zip q
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          gh release delete asr -y --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create asr asr-ru.zip asr-ru-rnnt.zip p/model.int8.onnx q/encoder.int8.onnx --repo "$GITHUB_REPOSITORY" --title "Распознавание речи (ru)" --notes "GigaAM v3 (лицензия MIT): RNNT с пунктуацией (asr-ru-rnnt.zip, encoder.int8.onnx — основная), CTC + Silero VAD (asr-ru.zip, model.int8.onnx — прежняя)."

@@ -1,0 +1,323 @@
+package com.moidela.app;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.ImageView;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import android.speech.RecognizerIntent;
+import android.view.View;
+import android.view.WindowManager;
+import android.app.DatePickerDialog;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
+import android.widget.Spinner;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class QuickAddActivity extends Activity {
+    EditText et;
+    Spinner spList, spDue;
+    ArrayList<String> listIds = new ArrayList<>(), listNames = new ArrayList<>(), dueNames = new ArrayList<>();
+    String pickedDate = null;
+    byte[] imgBytes = null;
+    String imgType = "image/jpeg", imgName = "Картинка";
+    Bitmap imgBmp = null;
+    String fileErr = null;
+    String fileLabel = null;
+    boolean isVideo = false;   // в тексте ссылка на YouTube: спрашиваем «это видео?»
+
+    @Override protected void onCreate(Bundle s) {
+        super.onCreate(s);
+        if (!Store.linked(this)) {
+            Toast.makeText(this, "Сначала подключите телефон: Настройки → Уведомления → «Подключить Android»", Toast.LENGTH_LONG).show();
+            startActivity(W.openApp(this));
+            finish();
+            return;
+        }
+        Intent in = getIntent();
+        String presetList = in.getStringExtra("list");
+        et = new EditText(this);
+        et.setHint("Что сделать?");
+        et.setMinLines(2);
+        if (Intent.ACTION_SEND.equals(in.getAction())) {
+            String t = in.getStringExtra(Intent.EXTRA_TEXT), sub = in.getStringExtra(Intent.EXTRA_SUBJECT);
+            et.setText(sub != null && sub.length() > 0 && (t == null || !t.startsWith(sub)) ? sub + (t == null ? "" : "\n" + t) : (t == null ? "" : t));
+            isVideo = t != null && java.util.regex.Pattern.compile("https?://(?:www\\.|m\\.)?(?:youtube\\.com|youtu\\.be)/\\S+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(t).find();
+        }
+        if (Intent.ACTION_SEND.equals(in.getAction()) && in.getParcelableExtra(Intent.EXTRA_STREAM) != null) {
+            Uri u = (Uri) in.getParcelableExtra(Intent.EXTRA_STREAM);
+            String mt = in.getType() != null ? in.getType() : getContentResolver().getType(u);
+            if (mt != null && mt.startsWith("image/") && !mt.contains("gif") && !mt.contains("svg")) loadImage(u, mt);
+            else loadFile(u, mt);
+            if (imgBytes == null) {
+                Toast.makeText(this, fileErr != null ? fileErr : "Не удалось прочитать файл", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+        }
+        listIds.add(""); listNames.add("📥 Без списка");
+        try {
+            JSONArray a = new JSONObject(Store.p(this).getString("data", "{}")).optJSONArray("lists");
+            if (a != null) for (int i = 0; i < a.length(); i++) {
+                JSONObject l = a.optJSONObject(i);
+                if ("📦 Архив".equals(l.optString("group_name"))) continue;   // архивные списки в выборе не нужны
+                listIds.add(l.optString("id")); listNames.add((l.isNull("icon") ? "" : l.optString("icon") + " ") + l.optString("name"));
+            }
+        } catch (Exception e) { /* только «без списка» */ }
+        String filesId = null;   // файл/картинка по умолчанию кладём в список «Файлы» (если его нет — сервер создаст)
+        if (imgBytes != null) {
+            for (int i = 0; i < listNames.size(); i++) if (listNames.get(i).toLowerCase().endsWith("файлы")) { filesId = listIds.get(i); break; }
+            if (filesId == null) { filesId = "__files"; listIds.add(filesId); listNames.add("📎 Файлы (создам)"); }
+        }
+        String videoId = null;   // список «Видео»: если ссылка на YouTube и пользователь подтвердит — кладём туда (нет списка — сервер создаст)
+        if (isVideo && imgBytes == null) {
+            for (int i = 0; i < listNames.size(); i++) if (listNames.get(i).toLowerCase().replaceAll("^[^а-яa-z]+", "").equals("видео")) { videoId = listIds.get(i); break; }
+            if (videoId == null) { videoId = "__video"; listIds.add(videoId); listNames.add("📺 Видео (создам)"); }
+        }
+        final String vId = videoId;
+        spList = new Spinner(this);
+        spList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, listNames));
+        String want = filesId != null ? filesId : presetList != null ? presetList : Store.p(this).getString("lastlist", "");
+        int pos = listIds.indexOf(want);
+        spList.setSelection(vId != null ? listIds.indexOf(vId) : pos < 0 ? 0 : pos);
+        dueNames.add("Без срока"); dueNames.add("Сегодня"); dueNames.add("Завтра"); dueNames.add("Через неделю"); dueNames.add("Выбрать дату…");
+        spDue = new Spinner(this);
+        spDue.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, dueNames));
+        spDue.setSelection(in.getBooleanExtra("today", false) ? 1 : 0);
+        spDue.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> p, View v, int i, long id) {
+                if (i != 4) return;
+                java.util.Calendar c = java.util.Calendar.getInstance();
+                new DatePickerDialog(QuickAddActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    public void onDateSet(DatePicker dp, int y, int m, int d) {
+                        pickedDate = String.format(java.util.Locale.US, "%04d-%02d-%02d", y, m + 1, d);
+                        dueNames.set(4, "📅 " + String.format(java.util.Locale.US, "%02d.%02d.%04d", d, m + 1, y));
+                        ((ArrayAdapter) spDue.getAdapter()).notifyDataSetChanged();
+                    }
+                }, c.get(java.util.Calendar.YEAR), c.get(java.util.Calendar.MONTH), c.get(java.util.Calendar.DAY_OF_MONTH)).show();
+            }
+            public void onNothingSelected(AdapterView<?> p) {}
+        });
+        Button ok = new Button(this);
+        ok.setText("Добавить");
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        int pd = (int) (16 * getResources().getDisplayMetrics().density);
+        l.setPadding(pd, pd, pd, pd);
+        TextView h = new TextView(this);
+        h.setText("Новое дело");
+        h.setTextSize(18);
+        l.addView(h);
+        if (imgBmp != null) {
+            ImageView iv = new ImageView(this);
+            iv.setImageBitmap(imgBmp);
+            iv.setAdjustViewBounds(true);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            iv.setMaxHeight((int) (180 * getResources().getDisplayMetrics().density));
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            ip.setMargins(0, pd / 2, 0, pd / 2);
+            l.addView(iv, ip);
+            et.setHint("Название (пусто — имя файла)");
+        }
+        if (fileLabel != null) {
+            TextView fv = new TextView(this);
+            fv.setText("📎 " + fileLabel);
+            fv.setTextSize(15);
+            fv.setPadding(0, pd / 2, 0, pd / 2);
+            l.addView(fv);
+            et.setHint("Название (пусто — имя файла)");
+        }
+        l.addView(et);
+        final TextView l1 = new TextView(this); l1.setText("Список"); l1.setPadding(0, pd / 2, 0, 0);
+        if (vId != null) {   // «Это видео?» → да: сразу в «Видео», нет: обычный выбор списка
+            final LinearLayout vq = new LinearLayout(this); vq.setOrientation(LinearLayout.VERTICAL);
+            TextView q = new TextView(this); q.setText("📺 Это видео?"); q.setTextSize(16); q.setPadding(0, pd / 2, 0, pd / 4); vq.addView(q);
+            LinearLayout row = new LinearLayout(this);
+            Button yes = new Button(this); yes.setText("Да — в «Видео»");
+            Button no = new Button(this); no.setText("Нет, выбрать список");
+            row.addView(yes, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            row.addView(no, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            vq.addView(row);
+            spList.setSelection(listIds.indexOf(vId));
+            l.addView(vq); l.addView(l1); l.addView(spList);
+            l1.setVisibility(View.GONE); spList.setVisibility(View.GONE);
+            yes.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { spList.setSelection(listIds.indexOf(vId)); vq.setVisibility(View.GONE); } });
+            no.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { spList.setSelection(0); vq.setVisibility(View.GONE); l1.setVisibility(View.VISIBLE); spList.setVisibility(View.VISIBLE); } });
+        } else { l.addView(l1); l.addView(spList); }
+        TextView l2 = new TextView(this); l2.setText("Срок"); l2.setPadding(0, pd / 2, 0, 0); l.addView(l2);
+        l.addView(spDue);
+        l.addView(ok);
+        setContentView(l);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        ok.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { submit(); } });
+        if (in.getBooleanExtra("voice", false)) {
+            try {
+                Intent r = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
+                    .putExtra(RecognizerIntent.EXTRA_PROMPT, "Что записать?");
+                startActivityForResult(r, 7);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "На телефоне нет голосового ввода — пишите текстом", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override protected void onActivityResult(int rq, int rc, Intent d) {
+        super.onActivityResult(rq, rc, d);
+        if (rq != 7) return;
+        ArrayList<String> r = rc == RESULT_OK && d != null ? d.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
+        if (r != null && r.size() > 0 && r.get(0).length() > 0) {
+            String t = r.get(0);
+            et.setText(t.substring(0, 1).toUpperCase() + t.substring(1));
+            submit();
+        } else finish();
+    }
+
+    // читаем картинку из «Поделиться»: ужимаем до 1600 px по длинной стороне, учитываем поворот из EXIF
+    void loadImage(Uri u, String mime) {
+        try {
+            InputStream is = getContentResolver().openInputStream(u);
+            if (is == null) return;
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[16384];
+            int n;
+            while ((n = is.read(buf)) > 0) {
+                bo.write(buf, 0, n);
+                if (bo.size() > 40 * 1024 * 1024) { is.close(); return; }
+            }
+            is.close();
+            byte[] raw = bo.toByteArray();
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(raw, 0, raw.length, o);
+            if (o.outWidth <= 0) return;
+            int big = Math.max(o.outWidth, o.outHeight), ss = 1;
+            while (big / (ss * 2) >= 1600) ss *= 2;
+            o = new BitmapFactory.Options();
+            o.inSampleSize = ss;
+            Bitmap b = BitmapFactory.decodeByteArray(raw, 0, raw.length, o);
+            if (b == null) return;
+            int rot = 0;
+            if (Build.VERSION.SDK_INT >= 24) {
+                try {
+                    android.media.ExifInterface ex = new android.media.ExifInterface(new java.io.ByteArrayInputStream(raw));
+                    int or = ex.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, 1);
+                    rot = or == 6 ? 90 : or == 3 ? 180 : or == 8 ? 270 : 0;
+                } catch (Exception e) { /* без поворота */ }
+            }
+            float k = Math.min(1f, 1600f / Math.max(b.getWidth(), b.getHeight()));
+            if (k < 1f || rot != 0) {
+                Matrix m = new Matrix();
+                if (k < 1f) m.postScale(k, k);
+                if (rot != 0) m.postRotate(rot);
+                b = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), m, true);
+            }
+            boolean png = "image/png".equals(mime);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            b.compress(png ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG, png ? 100 : 88, out);
+            if (png && out.size() > 2500 * 1024) { out.reset(); b.compress(Bitmap.CompressFormat.JPEG, 88, out); png = false; }
+            imgBytes = out.toByteArray();
+            imgType = png ? "image/png" : "image/jpeg";
+            java.util.Calendar cc = java.util.Calendar.getInstance();
+            imgName = String.format(java.util.Locale.US, "Снимок %02d.%02d %02d-%02d", cc.get(java.util.Calendar.DAY_OF_MONTH), cc.get(java.util.Calendar.MONTH) + 1, cc.get(java.util.Calendar.HOUR_OF_DAY), cc.get(java.util.Calendar.MINUTE));
+            imgBmp = b;
+        } catch (Throwable e) { imgBytes = null; }
+    }
+
+    // любой файл из «Поделиться»: берём как есть (до 20 МБ), имя — из системы
+    void loadFile(Uri u, String mime) {
+        try {
+            String name = null;
+            long size = -1;
+            android.database.Cursor cu = getContentResolver().query(u, null, null, null, null);
+            if (cu != null) {
+                try {
+                    if (cu.moveToFirst()) {
+                        int ni = cu.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME), si = cu.getColumnIndex(android.provider.OpenableColumns.SIZE);
+                        if (ni >= 0) name = cu.getString(ni);
+                        if (si >= 0 && !cu.isNull(si)) size = cu.getLong(si);
+                    }
+                } finally { cu.close(); }
+            }
+            if (size > 20L * 1024 * 1024) { fileErr = "Файл больше 20 МБ"; return; }
+            InputStream is = getContentResolver().openInputStream(u);
+            if (is == null) return;
+            ByteArrayOutputStream bo = new ByteArrayOutputStream(size > 0 ? (int) size : 65536);
+            byte[] buf = new byte[32768];
+            int n;
+            while ((n = is.read(buf)) > 0) {
+                bo.write(buf, 0, n);
+                if (bo.size() > 20 * 1024 * 1024) { is.close(); fileErr = "Файл больше 20 МБ"; return; }
+            }
+            is.close();
+            if (bo.size() == 0) return;
+            if (name == null || name.length() == 0) {
+                String p = u.getLastPathSegment();
+                name = p != null && p.length() > 0 ? p.substring(p.lastIndexOf('/') + 1) : "Файл";
+            }
+            imgBytes = bo.toByteArray();
+            imgType = mime != null && mime.length() > 0 ? mime : "application/octet-stream";
+            imgName = name;
+            fileLabel = name + " · " + (imgBytes.length > 1048576 ? String.format(java.util.Locale.US, "%.1f МБ", imgBytes.length / 1048576.0) : Math.max(1, imgBytes.length / 1024) + " КБ");
+        } catch (Throwable e) { imgBytes = null; }
+    }
+
+    String dueFor(int i) {
+        if (i == 0) return null;
+        if (i == 4) return pickedDate;
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.add(java.util.Calendar.DAY_OF_MONTH, i == 1 ? 0 : i == 2 ? 1 : 7);
+        return String.format(java.util.Locale.US, "%04d-%02d-%02d", c.get(java.util.Calendar.YEAR), c.get(java.util.Calendar.MONTH) + 1, c.get(java.util.Calendar.DAY_OF_MONTH));
+    }
+
+    void submit() {
+        String tx = et.getText().toString().trim();
+        if (tx.length() == 0 && imgBytes != null) {
+            java.util.Calendar cc = java.util.Calendar.getInstance();
+            tx = fileLabel != null || !"Картинка".equals(imgName) ? imgName : String.format(java.util.Locale.US, "Картинка %02d.%02d %02d:%02d", cc.get(java.util.Calendar.DAY_OF_MONTH), cc.get(java.util.Calendar.MONTH) + 1, cc.get(java.util.Calendar.HOUR_OF_DAY), cc.get(java.util.Calendar.MINUTE));
+        }
+        final String text = tx;
+        if (text.length() == 0) return;
+        final String lid = listIds.get(spList.getSelectedItemPosition());
+        final String due = dueFor(spDue.getSelectedItemPosition());
+        if (!"__files".equals(lid) && !"__video".equals(lid)) Store.p(this).edit().putString("lastlist", lid).apply();
+        final android.content.Context c = getApplicationContext();
+        new Thread(new Runnable() { public void run() {
+            String res = null;
+            boolean imgFail = false;
+            try {
+                String first = text.split("\n", 2)[0], note = text.contains("\n") ? text.split("\n", 2)[1] : null;
+                JSONObject j = new JSONObject().put("title", first);
+                if (due != null) j.put("due", due);
+                if (note != null) j.put("note", note);
+                if ("__files".equals(lid)) j.put("list_name", "Файлы"); else if ("__video".equals(lid)) j.put("list_name", "Видео"); else if (lid.length() > 0) j.put("list_id", lid);
+                res = Net.post(Store.api(c, "add", ""), j.toString());
+                if (res != null && imgBytes != null) {   // картинка — вложением к только что созданной задаче
+                    String id = new JSONObject(res).optString("id");
+                    String up = id.length() > 0 ? Net.postBytes(Store.api(c, "up", "&id=" + id + "&name=" + java.net.URLEncoder.encode(imgName, "UTF-8")), imgBytes, imgType) : null;
+                    if (up == null) imgFail = true;
+                }
+            } catch (Exception e) { /* ниже покажем ошибку */ }
+            final boolean good = res != null, fail = imgFail;
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() { public void run() { Toast.makeText(c, !good ? "Нет связи — не добавилось" : fail ? "Дело добавлено, но файл не загрузился" : "Добавлено ✓", Toast.LENGTH_SHORT).show(); } });
+            if (good) Sync.run(c);
+        } }).start();
+        finish();
+    }
+}
