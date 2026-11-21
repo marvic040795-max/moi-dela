@@ -35,7 +35,7 @@ import java.util.Comparator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** РЎРѕРІРµС‰Р°РЅРёСЏ: Р·Р°РїРёСЃСЊ (СЃ СЌРєСЂР°РЅРѕРј В«Р¶РёРІРѕР№В» СЃР»СѓР¶Р±С‹), СЃРєР°С‡РёРІР°РЅРёРµ РјРѕРґРµР»Рё, СЂР°СЃС€РёС„СЂРѕРІРєР°, С‚РµРєСЃС‚/РїРѕРґРµР»РёС‚СЊСЃСЏ/СЃРѕС…СЂР°РЅРёС‚СЊ РІ Р—Р°РіСЂСѓР·РєРё. */
+/** Совещания: запись (с экраном «живой» службы), скачивание модели, расшифровка, текст/поделиться/сохранить в Загрузки. */
 public class MeetActivity extends Activity {
     static final String URL_MODEL = "https://github.com/marvic040795-max/moi-dela/releases/download/asr/asr-ru-rnnt.zip";
     static volatile String dlStatus = ""; static volatile boolean dlBusy = false;
@@ -68,58 +68,58 @@ public class MeetActivity extends Activity {
         for (File f : wavs()) s += f.getName() + f.lastModified() + new File(f.getPath().replace(".wav", ".txt")).exists();
         if (s.equals(sig)) return; sig = s;
         box.removeAllViews();
-        box.addView(tv("РЎРѕРІРµС‰Р°РЅРёСЏ", 22, "#ffffff", true));
-        box.addView(tv("Р—Р°РїРёСЃСЊ в†’ СЂР°СЃС€РёС„СЂРѕРІРєР° РЅР° СЃР°РјРѕРј С‚РµР»РµС„РѕРЅРµ, Р±РµР· РёРЅС‚РµСЂРЅРµС‚Р°. РўРµРєСЃС‚ РЅРёРєСѓРґР° РЅРµ РѕС‚РїСЂР°РІР»СЏРµС‚СЃСЏ.", 13, "#9a93b8", false));
+        box.addView(tv("Совещания", 22, "#ffffff", true));
+        box.addView(tv("Запись → расшифровка на самом телефоне, без интернета. Текст никуда не отправляется.", 13, "#9a93b8", false));
         if (!MeetService.modelReady(this)) {
-            box.addView(tv(dlBusy ? dlStatus : "Р”Р»СЏ СЂР°СЃС€РёС„СЂРѕРІРєРё РЅСѓР¶РЅР° РјРѕРґРµР»СЊ СЂР°СЃРїРѕР·РЅР°РІР°РЅРёСЏ СЂСѓСЃСЃРєРѕР№ СЂРµС‡Рё (в‰€232 РњР‘, СЃРєР°С‡РёРІР°РµС‚СЃСЏ РѕРґРёРЅ СЂР°Р·; GigaAM v3 RNNT вЂ” С‚РѕС‡РЅРµРµ РїСЂРµР¶РЅРµР№, СЃРѕ Р·РЅР°РєР°РјРё РїСЂРµРїРёРЅР°РЅРёСЏ).", 14, "#e6e1ff", false));
-            if (!dlBusy) box.addView(bt("РЎРєР°С‡Р°С‚СЊ РјРѕРґРµР»СЊ", new View.OnClickListener() { public void onClick(View v) { download(); } }));
+            box.addView(tv(dlBusy ? dlStatus : "Для расшифровки нужна модель распознавания русской речи (≈232 МБ, скачивается один раз; GigaAM v3 RNNT — точнее прежней, со знаками препинания).", 14, "#e6e1ff", false));
+            if (!dlBusy) box.addView(bt("Скачать модель", new View.OnClickListener() { public void onClick(View v) { download(); } }));
         }
         if (MeetService.rec) {
             long sec = (System.currentTimeMillis() - MeetService.recStart) / 1000;
-            box.addView(tv("в—Џ РРґС‘С‚ Р·Р°РїРёСЃСЊ: " + String.format("%d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60), 18, "#ff6b6b", true));
-            box.addView(bt("в–  РћСЃС‚Р°РЅРѕРІРёС‚СЊ Р·Р°РїРёСЃСЊ", new View.OnClickListener() { public void onClick(View v) { startService(new Intent(MeetActivity.this, MeetService.class).setAction("stop")); } }));
+            box.addView(tv("● Идёт запись: " + String.format("%d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60), 18, "#ff6b6b", true));
+            box.addView(bt("■ Остановить запись", new View.OnClickListener() { public void onClick(View v) { startService(new Intent(MeetActivity.this, MeetService.class).setAction("stop")); } }));
         } else if (!MeetService.tr) {
-            box.addView(bt("пј‹ РРјРїРѕСЂС‚ РёР· С„Р°Р№Р»Р° (РґРёРєС‚РѕС„РѕРЅ, РіР°Р»РµСЂРµСЏ)", new View.OnClickListener() { public void onClick(View v) { pick(); } }));
-            box.addView(bt("в—Џ РќР°С‡Р°С‚СЊ Р·Р°РїРёСЃСЊ СЃРѕРІРµС‰Р°РЅРёСЏ", new View.OnClickListener() { public void onClick(View v) { startRec(); } }));
+            box.addView(bt("＋ Импорт из файла (диктофон, галерея)", new View.OnClickListener() { public void onClick(View v) { pick(); } }));
+            box.addView(bt("● Начать запись совещания", new View.OnClickListener() { public void onClick(View v) { startRec(); } }));
         }
         if (MeetService.tr) {
-            box.addView(tv("Р Р°СЃС€РёС„СЂРѕРІРєР°: " + MeetService.trName + " вЂ” " + MeetService.prog + "%", 15, "#a99bff", true));
-            box.addView(tv("РњРѕР¶РЅРѕ Р·Р°РєСЂС‹С‚СЊ СЌРєСЂР°РЅ Рё СѓР±СЂР°С‚СЊ С‚РµР»РµС„РѕРЅ: РёРґС‘С‚ РІ С„РѕРЅРµ, РІ С€С‚РѕСЂРєРµ РІРёРґРЅРѕ РїСЂРѕРіСЂРµСЃСЃ.", 12, "#9a93b8", false));
-            box.addView(bt("в–  РџСЂРµСЂРІР°С‚СЊ", new View.OnClickListener() { public void onClick(View v) { startService(new Intent(MeetActivity.this, MeetService.class).setAction("stop")); } }));
+            box.addView(tv("Расшифровка: " + MeetService.trName + " — " + MeetService.prog + "%", 15, "#a99bff", true));
+            box.addView(tv("Можно закрыть экран и убрать телефон: идёт в фоне, в шторке видно прогресс.", 12, "#9a93b8", false));
+            box.addView(bt("■ Прервать", new View.OnClickListener() { public void onClick(View v) { startService(new Intent(MeetActivity.this, MeetService.class).setAction("stop")); } }));
         }
-        String lg = read(new File(MeetService.dir(this), "log.txt")); if (lg.length() > 0) { String[] ls = lg.trim().split("\n"); StringBuilder sb2 = new StringBuilder(); for (int i = Math.max(0, ls.length - 12); i < ls.length; i++) sb2.append(ls[i]).append('\n'); box.addView(tv("Р–СѓСЂРЅР°Р»:\n" + sb2, 11, "#7d76a0", false)); }
+        String lg = read(new File(MeetService.dir(this), "log.txt")); if (lg.length() > 0) { String[] ls = lg.trim().split("\n"); StringBuilder sb2 = new StringBuilder(); for (int i = Math.max(0, ls.length - 12); i < ls.length; i++) sb2.append(ls[i]).append('\n'); box.addView(tv("Журнал:\n" + sb2, 11, "#7d76a0", false)); }
         if (MeetService.status.length() > 0) box.addView(tv(MeetService.status, 13, "#9a93b8", false));
-        box.addView(tv("Р—Р°РїРёСЃРё", 17, "#ffffff", true));
+        box.addView(tv("Записи", 17, "#ffffff", true));
         File[] ws = wavs();
-        if (ws.length == 0) box.addView(tv("РџРѕРєР° РЅРµС‚ Р·Р°РїРёСЃРµР№.", 13, "#9a93b8", false));
+        if (ws.length == 0) box.addView(tv("Пока нет записей.", 13, "#9a93b8", false));
         for (final File f : ws) {
             final File txt = new File(f.getPath().replace(".wav", ".txt"));
             long sec = Math.max(0, (f.length() - 44) / 32000);
-            box.addView(tv(f.getName().replace("meet-", "").replace(".wav", "") + " В· " + (sec < 60 ? sec + " СЃ" : sec / 60 + " РјРёРЅ " + sec % 60 + " СЃ") + " В· " + (f.length() < (1 << 20) ? (f.length() >> 10) + " РљР‘" : (f.length() >> 20) + " РњР‘") + (txt.exists() ? " В· вњ“ С‚РµРєСЃС‚ РіРѕС‚РѕРІ" : ""), 14, "#e6e1ff", false));
+            box.addView(tv(f.getName().replace("meet-", "").replace(".wav", "") + " · " + (sec < 60 ? sec + " с" : sec / 60 + " мин " + sec % 60 + " с") + " · " + (f.length() < (1 << 20) ? (f.length() >> 10) + " КБ" : (f.length() >> 20) + " МБ") + (txt.exists() ? " · ✓ текст готов" : ""), 14, "#e6e1ff", false));
             LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
-            if (!txt.exists() && !MeetService.tr && !MeetService.rec && MeetService.modelReady(this)) row.addView(bt("Р Р°СЃС€РёС„СЂРѕРІР°С‚СЊ", new View.OnClickListener() { public void onClick(View v) { startForegroundSvc(new Intent(MeetActivity.this, MeetService.class).setAction("tr").putExtra("wav", f.getAbsolutePath())); } }));
+            if (!txt.exists() && !MeetService.tr && !MeetService.rec && MeetService.modelReady(this)) row.addView(bt("Расшифровать", new View.OnClickListener() { public void onClick(View v) { startForegroundSvc(new Intent(MeetActivity.this, MeetService.class).setAction("tr").putExtra("wav", f.getAbsolutePath())); } }));
             if (txt.exists()) {
-                row.addView(bt("РўРµРєСЃС‚", new View.OnClickListener() { public void onClick(View v) { showText(txt); } }));
-                row.addView(bt("РџРѕРґРµР»РёС‚СЊСЃСЏ", new View.OnClickListener() { public void onClick(View v) { share(txt); } }));
-                row.addView(bt(new File(f.getPath().replace(".wav", ".exp")).exists() ? "PDF" : "Р’ В«Р”РѕРєСѓРјРµРЅС‚С‹В»", new View.OnClickListener() { public void onClick(View v) { saveDocs(f, txt); } }));
+                row.addView(bt("Текст", new View.OnClickListener() { public void onClick(View v) { showText(txt); } }));
+                row.addView(bt("Поделиться", new View.OnClickListener() { public void onClick(View v) { share(txt); } }));
+                row.addView(bt(new File(f.getPath().replace(".wav", ".exp")).exists() ? "PDF" : "В «Документы»", new View.OnClickListener() { public void onClick(View v) { saveDocs(f, txt); } }));
             }
-            row.addView(bt(playing != null && playing.equals(f.getName()) ? "в–  РЎС‚РѕРї" : "в–¶ РЎР»СѓС€Р°С‚СЊ", new View.OnClickListener() { public void onClick(View v) { play(f); } }));
-            if (!MeetService.tr && !MeetService.rec) row.addView(bt("РЈРґР°Р»РёС‚СЊ", new View.OnClickListener() { public void onClick(View v) { confirmDel(f, txt); } }));
+            row.addView(bt(playing != null && playing.equals(f.getName()) ? "■ Стоп" : "▶ Слушать", new View.OnClickListener() { public void onClick(View v) { play(f); } }));
+            if (!MeetService.tr && !MeetService.rec) row.addView(bt("Удалить", new View.OnClickListener() { public void onClick(View v) { confirmDel(f, txt); } }));
             box.addView(row);
         }
     }
 
 
-    // ---- РёРјРїРѕСЂС‚ / РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ / РґРѕРєСѓРјРµРЅС‚С‹ ----
+    // ---- импорт / воспроизведение / документы ----
     private String playing = null; private android.media.MediaPlayer mp = null;
     private void pick() {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("audio/*").putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/*", "video/mp4", "application/ogg"});
-        try { startActivityForResult(i, 77); } catch (Throwable e) { Toast.makeText(this, "РќРµС‚ РїСЂРѕРіСЂР°РјРјС‹ РІС‹Р±РѕСЂР° С„Р°Р№Р»РѕРІ", Toast.LENGTH_LONG).show(); }
+        try { startActivityForResult(i, 77); } catch (Throwable e) { Toast.makeText(this, "Нет программы выбора файлов", Toast.LENGTH_LONG).show(); }
     }
     @Override protected void onActivityResult(int rq, int rs, Intent d) {
         super.onActivityResult(rq, rs, d);
         if (rq != 77 || rs != RESULT_OK || d == null || d.getData() == null) return;
-        Uri u = d.getData(); String nm = "С„Р°Р№Р»";
+        Uri u = d.getData(); String nm = "файл";
         try { android.database.Cursor c = getContentResolver().query(u, null, null, null, null); if (c != null) { if (c.moveToFirst()) { int ix = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (ix >= 0) nm = c.getString(ix); } c.close(); } } catch (Throwable e) { }
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 2);
         startForegroundSvc(new Intent(this, MeetService.class).setAction("imp").putExtra("uri", u.toString()).putExtra("name", nm));
@@ -132,18 +132,18 @@ public class MeetActivity extends Activity {
             if (!same) { mp = new android.media.MediaPlayer(); mp.setDataSource(f.getPath()); mp.prepare(); mp.start(); playing = f.getName();
                 mp.setOnCompletionListener(new android.media.MediaPlayer.OnCompletionListener() { public void onCompletion(android.media.MediaPlayer m) { playing = null; sig = ""; } }); }
             sig = "";
-        } catch (Throwable e) { Toast.makeText(this, "РќРµ РІРѕСЃРїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
+        } catch (Throwable e) { Toast.makeText(this, "Не воспроизводится: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
     }
     @Override protected void onDestroy() { super.onDestroy(); if (mp != null) { try { mp.release(); } catch (Throwable e) { } } }
     private void saveDocs(final File wav, final File txt) {
         final File pu = new File(wav.getPath().replace(".wav", ".pdfuri"));
         try {
-            if (new File(wav.getPath().replace(".wav", ".exp")).exists() && pu.exists()) {   // СѓР¶Рµ СЃРѕС…СЂР°РЅРµРЅРѕ в†’ РїРѕРґРµР»РёС‚СЊСЃСЏ PDF
+            if (new File(wav.getPath().replace(".wav", ".exp")).exists() && pu.exists()) {   // уже сохранено → поделиться PDF
                 Intent i = new Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, Uri.parse(read(pu).trim())).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(i, "PDF СЃРѕРІРµС‰Р°РЅРёСЏ")); return;
+                startActivity(Intent.createChooser(i, "PDF совещания")); return;
             }
-            MeetStore.export(this, wav, txt); Toast.makeText(this, "РЎРѕС…СЂР°РЅРµРЅРѕ РІ Р”РѕРєСѓРјРµРЅС‚С‹/РЎРѕРІРµС‰Р°РЅРёСЏ: Р°СѓРґРёРѕ, С‚РµРєСЃС‚, PDF", Toast.LENGTH_LONG).show(); sig = "";
-        } catch (Throwable e) { Toast.makeText(this, "РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
+            MeetStore.export(this, wav, txt); Toast.makeText(this, "Сохранено в Документы/Совещания: аудио, текст, PDF", Toast.LENGTH_LONG).show(); sig = "";
+        } catch (Throwable e) { Toast.makeText(this, "Не получилось: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
     }
 
     private void startForegroundSvc(Intent i) { if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i); }
@@ -159,38 +159,38 @@ public class MeetActivity extends Activity {
 
     private void showText(File txt) {
         ScrollView sv = new ScrollView(this); TextView t = new TextView(this); t.setText(read(txt)); t.setTextIsSelectable(true); t.setTextSize(15); t.setPadding(dp(16), dp(10), dp(16), dp(10)); sv.addView(t);
-        new AlertDialog.Builder(this).setTitle(txt.getName()).setView(sv).setPositiveButton("Р—Р°РєСЂС‹С‚СЊ", null).show();
+        new AlertDialog.Builder(this).setTitle(txt.getName()).setView(sv).setPositiveButton("Закрыть", null).show();
     }
-    private void share(File txt) { Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_SUBJECT, "РЎРѕРІРµС‰Р°РЅРёРµ " + txt.getName()).putExtra(Intent.EXTRA_TEXT, read(txt)); startActivity(Intent.createChooser(i, "РћС‚РїСЂР°РІРёС‚СЊ С‚РµРєСЃС‚")); }
+    private void share(File txt) { Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_SUBJECT, "Совещание " + txt.getName()).putExtra(Intent.EXTRA_TEXT, read(txt)); startActivity(Intent.createChooser(i, "Отправить текст")); }
     private void toDownloads(File txt) {
         try {
             if (Build.VERSION.SDK_INT >= 29) {
                 ContentValues cv = new ContentValues(); cv.put(MediaStore.Downloads.DISPLAY_NAME, txt.getName()); cv.put(MediaStore.Downloads.MIME_TYPE, "text/plain"); cv.put(MediaStore.Downloads.RELATIVE_PATH, "Download");
                 Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv); OutputStream o = getContentResolver().openOutputStream(u); o.write(read(txt).getBytes("UTF-8")); o.close();
-                Toast.makeText(this, "РЎРѕС…СЂР°РЅРµРЅРѕ РІ Р—Р°РіСЂСѓР·РєРё: " + txt.getName(), Toast.LENGTH_LONG).show();
-            } else Toast.makeText(this, "РСЃРїРѕР»СЊР·СѓР№С‚Рµ В«РџРѕРґРµР»РёС‚СЊСЃСЏВ»", Toast.LENGTH_LONG).show();
-        } catch (Throwable e) { Toast.makeText(this, "РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
+                Toast.makeText(this, "Сохранено в Загрузки: " + txt.getName(), Toast.LENGTH_LONG).show();
+            } else Toast.makeText(this, "Используйте «Поделиться»", Toast.LENGTH_LONG).show();
+        } catch (Throwable e) { Toast.makeText(this, "Не получилось сохранить: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
     }
     private void confirmDel(final File wav, final File txt) {
-        new AlertDialog.Builder(this).setTitle("РЈРґР°Р»РёС‚СЊ Р·Р°РїРёСЃСЊ?").setMessage(txt.exists() ? "Р‘СѓРґРµС‚ СѓРґР°Р»РµРЅРѕ Р°СѓРґРёРѕ Рё СЂР°СЃС€РёС„СЂРѕРІРєР°. Р•СЃР»Рё С‚РµРєСЃС‚ РЅСѓР¶РµРЅ, СЃРЅР°С‡Р°Р»Р° СЃРѕС…СЂР°РЅРёС‚Рµ РµРіРѕ РІ В«Р—Р°РіСЂСѓР·РєРёВ» РёР»Рё РїРѕРґРµР»РёС‚РµСЃСЊ." : "Р‘СѓРґРµС‚ СѓРґР°Р»РµРЅРѕ Р°СѓРґРёРѕ. Р Р°СЃС€РёС„СЂРѕРІРєРё РЅРµС‚.")
-            .setPositiveButton("РЈРґР°Р»РёС‚СЊ", new DialogInterface.OnClickListener() { public void onClick(DialogInterface d, int w) { wav.delete(); txt.delete(); new File(wav.getPath().replace(".wav", ".exp")).delete(); new File(wav.getPath().replace(".wav", ".pdfuri")).delete(); sig = ""; build(); } }).setNegativeButton("РћС‚РјРµРЅР°", null).show();
+        new AlertDialog.Builder(this).setTitle("Удалить запись?").setMessage(txt.exists() ? "Будет удалено аудио и расшифровка. Если текст нужен, сначала сохраните его в «Загрузки» или поделитесь." : "Будет удалено аудио. Расшифровки нет.")
+            .setPositiveButton("Удалить", new DialogInterface.OnClickListener() { public void onClick(DialogInterface d, int w) { wav.delete(); txt.delete(); new File(wav.getPath().replace(".wav", ".exp")).delete(); new File(wav.getPath().replace(".wav", ".pdfuri")).delete(); sig = ""; build(); } }).setNegativeButton("Отмена", null).show();
     }
 
     private void download() {
-        if (dlBusy) return; dlBusy = true; dlStatus = "Р—Р°РіСЂСѓР·РєР°вЂ¦"; final File dst = MeetService.modelDir(this); final File tmp = new File(getFilesDir(), "asr.tmp"); final File zip = new File(getCacheDir(), "asr-ru.zip");
+        if (dlBusy) return; dlBusy = true; dlStatus = "Загрузка…"; final File dst = MeetService.modelDir(this); final File tmp = new File(getFilesDir(), "asr.tmp"); final File zip = new File(getCacheDir(), "asr-ru.zip");
         new Thread(new Runnable() { public void run() {
             try {
                 HttpURLConnection cn = (HttpURLConnection) new URL(URL_MODEL).openConnection(); cn.setConnectTimeout(20000); cn.setReadTimeout(30000); cn.setInstanceFollowRedirects(true);
-                int code = cn.getResponseCode(); if (code != 200) throw new Exception("HTTP " + code + " (РјРѕРґРµР»СЊ РµС‰С‘ РЅРµ РѕРїСѓР±Р»РёРєРѕРІР°РЅР°?)");
+                int code = cn.getResponseCode(); if (code != 200) throw new Exception("HTTP " + code + " (модель ещё не опубликована?)");
                 long total = cn.getContentLengthLong(), got = 0, last = 0; byte[] buf = new byte[65536]; int n;
                 InputStream in = cn.getInputStream(); FileOutputStream out = new FileOutputStream(zip);
-                while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); got += n; if (System.currentTimeMillis() - last > 500) { last = System.currentTimeMillis(); dlStatus = "Р—Р°РіСЂСѓР·РєР°: " + (got >> 20) + (total > 0 ? " РёР· " + (total >> 20) : "") + " РњР‘"; } }
-                out.close(); in.close(); dlStatus = "Р Р°СЃРїР°РєРѕРІРєР°вЂ¦";
+                while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); got += n; if (System.currentTimeMillis() - last > 500) { last = System.currentTimeMillis(); dlStatus = "Загрузка: " + (got >> 20) + (total > 0 ? " из " + (total >> 20) : "") + " МБ"; } }
+                out.close(); in.close(); dlStatus = "Распаковка…";
                 rec(tmp); tmp.mkdirs();
                 ZipInputStream zi = new ZipInputStream(new BufferedInputStream(new FileInputStream(zip))); ZipEntry e;
                 while ((e = zi.getNextEntry()) != null) { if (e.isDirectory()) continue; File f = new File(tmp, new File(e.getName()).getName()); FileOutputStream fo = new FileOutputStream(f); while ((n = zi.read(buf)) > 0) fo.write(buf, 0, n); fo.close(); }
-                zi.close(); new File(tmp, ".ok").createNewFile(); rec(dst); tmp.renameTo(dst); zip.delete(); dlStatus = "РњРѕРґРµР»СЊ РіРѕС‚РѕРІР°";
-            } catch (Throwable e) { dlStatus = "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё: " + e.getMessage(); }
+                zi.close(); new File(tmp, ".ok").createNewFile(); rec(dst); tmp.renameTo(dst); zip.delete(); dlStatus = "Модель готова";
+            } catch (Throwable e) { dlStatus = "Ошибка загрузки: " + e.getMessage(); }
             dlBusy = false;
         } }).start();
     }

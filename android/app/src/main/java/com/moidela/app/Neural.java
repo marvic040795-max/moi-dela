@@ -20,15 +20,15 @@ import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** РќРµР№СЂРѕРіРѕР»РѕСЃ Piper (РѕС„Р»Р°Р№РЅ, sherpa-onnx). Р“РѕР»РѕСЃ РєР°С‡Р°РµС‚СЃСЏ РѕРґРёРЅ СЂР°Р· (~65 РњР‘) СЃ СЂРµР»РёР·Р° В«voicesВ» Рё Р»РµР¶РёС‚ РІ РїР°РјСЏС‚Рё РїСЂРёР»РѕР¶РµРЅРёСЏ. */
+/** Нейроголос Piper (офлайн, sherpa-onnx). Голос качается один раз (~65 МБ) с релиза «voices» и лежит в памяти приложения. */
 final class Neural {
     static final String[] IDS = {"", "y:filipp", "y:ermil", "y:madirus", "y:zahar", "y:alexander", "y:alena", "y:marina", "denis", "dmitri", "ruslan", "irina"};
-    static final String[] NAMES = {"Р’С‹РєР»СЋС‡РµРЅ (СЃРёСЃС‚РµРјРЅС‹Р№ РіРѕР»РѕСЃ)", "вЃ РЇРЅРґРµРєСЃ: Р¤РёР»РёРїРї (РјСѓР¶.)", "вЃ РЇРЅРґРµРєСЃ: Р•СЂРјРёР» (РјСѓР¶.)", "вЃ РЇРЅРґРµРєСЃ: РњР°РґРёСЂСѓСЃ (РјСѓР¶.)", "вЃ РЇРЅРґРµРєСЃ: Р—Р°С…Р°СЂ (РјСѓР¶.)", "вЃ РЇРЅРґРµРєСЃ: РђР»РµРєСЃР°РЅРґСЂ (РјСѓР¶.)", "вЃ РЇРЅРґРµРєСЃ: РђР»С‘РЅР° (Р¶РµРЅ.)", "вЃ РЇРЅРґРµРєСЃ: РњР°СЂРёРЅР° (Р¶РµРЅ.)",
-        "РћС„Р»Р°Р№РЅ Piper: Р”РµРЅРёСЃ", "РћС„Р»Р°Р№РЅ Piper: Р”РјРёС‚СЂРёР№", "РћС„Р»Р°Р№РЅ Piper: Р СѓСЃР»Р°РЅ", "РћС„Р»Р°Р№РЅ Piper: РСЂРёРЅР° (Р¶РµРЅ.)"};
+    static final String[] NAMES = {"Выключен (системный голос)", "☁ Яндекс: Филипп (муж.)", "☁ Яндекс: Ермил (муж.)", "☁ Яндекс: Мадирус (муж.)", "☁ Яндекс: Захар (муж.)", "☁ Яндекс: Александр (муж.)", "☁ Яндекс: Алёна (жен.)", "☁ Яндекс: Марина (жен.)",
+        "Офлайн Piper: Денис", "Офлайн Piper: Дмитрий", "Офлайн Piper: Руслан", "Офлайн Piper: Ирина (жен.)"};
     static boolean isCloud(String v) { return v.startsWith("y:"); }
     static final String BASE = "https://github.com/marvic040795-max/moi-dela/releases/download/voices/voice-";
 
-    static volatile String status = "";      // РґР»СЏ СЌРєСЂР°РЅР° РЅР°СЃС‚СЂРѕРµРє
+    static volatile String status = "";      // для экрана настроек
     static volatile boolean busy = false;
     private static OfflineTts eng; private static String engVoice = ""; private static float engSpeed = 0;
 
@@ -36,20 +36,20 @@ final class Neural {
     static File dir(Context c, String v) { return new File(c.getFilesDir(), "piper/" + v); }
     static boolean ready(Context c, String v) { if (isCloud(v)) return true; File d = dir(c, v); return v.length() > 0 && new File(d, "model.onnx").exists() && new File(d, "tokens.txt").exists() && new File(d, "espeak-ng-data").isDirectory() && new File(d, ".ok").exists(); }
 
-    /** РЎРєР°С‡Р°С‚СЊ Рё СЂР°СЃРїР°РєРѕРІР°С‚СЊ РіРѕР»РѕСЃ (РІ С„РѕРЅРµ). onEnd вЂ” РІ РїРѕС‚РѕРєРµ Р·Р°РіСЂСѓР·РєРё. */
+    /** Скачать и распаковать голос (в фоне). onEnd — в потоке загрузки. */
     static synchronized void download(final Context ctx, final String v, final Runnable onEnd) {
-        if (busy) return; busy = true; status = "Р—Р°РіСЂСѓР·РєР°вЂ¦";
+        if (busy) return; busy = true; status = "Загрузка…";
         new Thread(new Runnable() { public void run() {
             File zip = new File(ctx.getCacheDir(), "voice-" + v + ".zip");
             try {
                 HttpURLConnection cn = (HttpURLConnection) new URL(BASE + v + ".zip").openConnection();
                 cn.setConnectTimeout(20000); cn.setReadTimeout(30000); cn.setInstanceFollowRedirects(true);
-                int code = cn.getResponseCode(); if (code != 200) throw new Exception("HTTP " + code + " (РіРѕР»РѕСЃ РµС‰С‘ РЅРµ РѕРїСѓР±Р»РёРєРѕРІР°РЅ?)");
+                int code = cn.getResponseCode(); if (code != 200) throw new Exception("HTTP " + code + " (голос ещё не опубликован?)");
                 long total = cn.getContentLengthLong(), got = 0; byte[] buf = new byte[65536]; int n; long last = 0;
                 InputStream in = cn.getInputStream(); FileOutputStream out = new FileOutputStream(zip);
-                while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); got += n; if (System.currentTimeMillis() - last > 400) { last = System.currentTimeMillis(); status = "Р—Р°РіСЂСѓР·РєР°: " + (got >> 20) + (total > 0 ? " РёР· " + (total >> 20) : "") + " РњР‘"; } }
+                while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); got += n; if (System.currentTimeMillis() - last > 400) { last = System.currentTimeMillis(); status = "Загрузка: " + (got >> 20) + (total > 0 ? " из " + (total >> 20) : "") + " МБ"; } }
                 out.close(); in.close();
-                status = "Р Р°СЃРїР°РєРѕРІРєР°вЂ¦";
+                status = "Распаковка…";
                 File d = dir(ctx, v), tmp = new File(d.getParentFile(), v + ".tmp"); deleteRec(tmp); tmp.mkdirs();
                 ZipInputStream zi = new ZipInputStream(new java.io.BufferedInputStream(new java.io.FileInputStream(zip))); ZipEntry e;
                 while ((e = zi.getNextEntry()) != null) {
@@ -58,8 +58,8 @@ final class Neural {
                     f.getParentFile().mkdirs(); FileOutputStream fo = new FileOutputStream(f); while ((n = zi.read(buf)) > 0) fo.write(buf, 0, n); fo.close();
                 }
                 zi.close(); new File(tmp, ".ok").createNewFile();
-                deleteRec(d); tmp.renameTo(d); status = "Р“РѕС‚РѕРІРѕ вњ“ (" + dirSize(d) / 1048576 + " РњР‘)";
-            } catch (Throwable t) { status = "РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ: " + t.getMessage(); }
+                deleteRec(d); tmp.renameTo(d); status = "Готово ✓ (" + dirSize(d) / 1048576 + " МБ)";
+            } catch (Throwable t) { status = "Не получилось: " + t.getMessage(); }
             finally { zip.delete(); busy = false; if (onEnd != null) onEnd.run(); }
         } }).start();
     }
@@ -76,17 +76,17 @@ final class Neural {
         eng = new OfflineTts(OfflineTtsConfig.builder().setModel(m).build()); engVoice = v; engSpeed = speed; return eng;
     }
 
-    /** РћР·РІСѓС‡РёС‚СЊ С‚РµРєСЃС‚ (РІ С„РѕРЅРµ, РїРѕС‚РѕРєРѕРІРѕ). onEnd РІС‹Р·С‹РІР°РµС‚СЃСЏ РІСЃРµРіРґР°; ok=false вЂ” РЅРµ РІС‹С€Р»Рѕ (РјРѕР¶РЅРѕ РїСЂРѕС‡РёС‚Р°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Рј РіРѕР»РѕСЃРѕРј). */
+    /** Озвучить текст (в фоне, потоково). onEnd вызывается всегда; ok=false — не вышло (можно прочитать системным голосом). */
     interface Done { void end(boolean ok); }
     private static volatile int token = 0; private static volatile android.media.MediaPlayer curMp = null; private static volatile AudioTrack curAt = null;
-    /** РїСЂРµСЂРІР°С‚СЊ Р»СЋР±СѓСЋ С‚РµРєСѓС‰СѓСЋ РѕР·РІСѓС‡РєСѓ (С‡С‚РѕР±С‹ РіРѕР»РѕСЃР° РЅРµ РЅР°РєР»Р°РґС‹РІР°Р»РёСЃСЊ) */
+    /** прервать любую текущую озвучку (чтобы голоса не накладывались) */
     static void stopAll() { token++; try { if (curMp != null) curMp.stop(); } catch (Throwable e) {} try { if (curAt != null) { curAt.pause(); curAt.flush(); } } catch (Throwable e) {} }
     private static void cloud(final Context ctx, final String v, final String text, final float speed, final Done end) {
         final int my = ++token;
         new Thread(new Runnable() { public void run() {
             boolean ok = false; File f = null;
             try {
-                // РєСЌС€ РѕР·РІСѓС‡РєРё РЅР° РґРёСЃРєРµ: РѕРґРёРЅР°РєРѕРІР°СЏ С„СЂР°Р·Р° (С‚РµРєСЃС‚+РіРѕР»РѕСЃ+СЃРєРѕСЂРѕСЃС‚СЊ) СЃРёРЅС‚РµР·РёСЂСѓРµС‚СЃСЏ РІ РѕР±Р»Р°РєРµ РѕРґРёРЅ СЂР°Р· Рё РїР»Р°С‚РёС‚СЃСЏ РѕРґРёРЅ СЂР°Р·
+                // кэш озвучки на диске: одинаковая фраза (текст+голос+скорость) синтезируется в облаке один раз и платится один раз
                 File cd = new File(ctx.getCacheDir(), "ttsc"); cd.mkdirs();
                 String key; try { java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-1"); byte[] h = md.digest((v + "|" + speed + "|" + text).getBytes("UTF-8")); StringBuilder sb = new StringBuilder(); for (byte x : h) sb.append(String.format("%02x", x)); key = sb.toString(); } catch (Throwable e) { key = "x" + (v + speed + text).hashCode(); }
                 f = new File(cd, key + ".mp3");
@@ -98,7 +98,7 @@ final class Neural {
                     File tmp = new File(cd, key + ".tmp"); FileOutputStream o = new FileOutputStream(tmp); o.write(android.util.Base64.decode(b64, android.util.Base64.DEFAULT)); o.close();
                     if (!tmp.renameTo(f)) f = tmp;
                     long tot = 0; File[] all = cd.listFiles(); if (all != null) for (File x : all) tot += x.length();
-                    if (tot > 30L * 1024 * 1024 && all != null) {   // Р±РѕР»СЊС€Рµ 30 РњР‘ вЂ” СѓРґР°Р»СЏРµРј СЃР°РјС‹Рµ СЃС‚Р°СЂС‹Рµ, РїРѕРєР° РЅРµ СЃС‚Р°РЅРµС‚ ~20 РњР‘
+                    if (tot > 30L * 1024 * 1024 && all != null) {   // больше 30 МБ — удаляем самые старые, пока не станет ~20 МБ
                         java.util.Arrays.sort(all, new java.util.Comparator<File>() { public int compare(File x, File y) { return Long.compare(x.lastModified(), y.lastModified()); } });
                         for (File x : all) { if (tot <= 20L * 1024 * 1024) break; if (x.equals(f)) continue; tot -= x.length(); x.delete(); }
                     }
@@ -129,7 +129,7 @@ final class Neural {
                     .setBufferSizeInBytes(Math.max(min, sr * 4)).setTransferMode(AudioTrack.MODE_STREAM).build();
                 final AudioTrack tr = at; tr.play();
                 t.generateWithCallback(text, 0, 1.0f, new OfflineTtsCallback() { public Integer invoke(float[] s) { tr.write(s, 0, s.length, AudioTrack.WRITE_BLOCKING); return 1; } });
-                // РґРѕР¶РёРґР°РµРјСЃСЏ, РїРѕРєР° РґРѕРёРіСЂР°РµС‚ С…РІРѕСЃС‚
+                // дожидаемся, пока доиграет хвост
                 Thread.sleep(250); at.stop(); ok = true;
             } catch (Throwable e) { ok = false; }
             finally { try { if (at != null) at.release(); } catch (Throwable e) {} end.end(ok); }
