@@ -66,7 +66,7 @@ window.APP_CONFIG = {
 <script src="notes.js"></script>
 <script>(function () {
 "use strict";
-const BUILD = "12.11 23:13";
+const BUILD = "21.11 15:06";
 /* ===== p1: утилиты, конфиг, состояние, темы, иконки ===== */
 const LSK = { cfg: "mytasks_cfg_v1", theme: "mytasks_theme_v1", cache: "mytasks_cache_v1", pending: "mytasks_pending_v1", view: "mytasks_view_v1", prefs: "mytasks_prefs_v1", notified: "mytasks_notified_v1" };
 const jget = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
@@ -190,7 +190,45 @@ const FAVS = (() => { const sq = (c1, c2, inner) => '<svg xmlns="http://www.w3.o
 const favHref = v => { const f = FAVS.find(x => x[0] === v); return f && f[2] ? "data:image/svg+xml," + encodeURIComponent(f[2]) : null; };
 function applyFav() { const h = favHref(PR.fav); if (!h) return; document.querySelectorAll('link[rel="icon"]').forEach(l => l.remove()); const l = document.createElement("link"); l.rel = "icon"; l.type = "image/svg+xml"; l.href = h; document.head.appendChild(l); }
 applyFav();
-const savePrefs = () => jset(LSK.prefs, PR);
+const savePrefs = () => { jset(LSK.prefs, PR); uiPushSoon(); };
+/* ---- оформление и меню в облаке (user_settings): ui:common — тема/цвета/меню/фильтры (общие), ui:m / ui:d — размер шрифта телефона / ПК.
+   Локально остаются PR.rail и PR.ritDone. Пустое облако дефолтами НЕ заливается: пишем только после реального изменения. ---- */
+const UIS = { loaded: false, busy: false, timer: 0, snap: null, boot: null };
+const UI_TH_DEF = { v: 2, theme: "classic", accent: "#2564cf", bg: "", font: "sys", dens: "normal", glass: false }, UI_PR_DEF = { sort: {}, group: {}, grid: {}, collapsed: {}, showDone: {}, dayStart: 8, dayEnd: 17, reserve: 25 };
+const UI_TH_LOC = ["size", "sizeW", "sz2", "sz3"], UI_PR_LOC = ["rail", "ritDone"], uiDevKey = () => PLAT_M ? "ui:m" : "ui:d";
+function uiPart() {
+  const th = Object.assign({}, TH), pr = Object.assign({}, PR); UI_TH_LOC.forEach(k => delete th[k]); UI_PR_LOC.forEach(k => delete pr[k]);
+  return { common: { th, pr }, dev: PLAT_M ? { size: TH.size } : { sizeW: TH.sizeW || "l" } };
+}
+UIS.boot = JSON.stringify(uiPart());
+function uiApply(c, d) {
+  if (c && c.th) { Object.keys(TH).forEach(k => { if (UI_TH_LOC.indexOf(k) < 0) delete TH[k]; }); Object.assign(TH, UI_TH_DEF, c.th); }
+  if (c && c.pr) { Object.keys(PR).forEach(k => { if (UI_PR_LOC.indexOf(k) < 0) delete PR[k]; }); Object.assign(PR, UI_PR_DEF, c.pr); }
+  if (d) { if (PLAT_M && d.size) { TH.size = d.size; TH.sz2 = 1; TH.sz3 = 1; } else if (!PLAT_M && d.sizeW) TH.sizeW = d.sizeW; }
+  jset(LSK.theme, TH); jset(LSK.prefs, PR);
+  try { applyTheme(); applyFav(); } catch (e) {} renderSoon();
+}
+async function uiPull() {
+  if (UIS.loaded || UIS.busy || typeof sb === "undefined" || !sb || !S.user) return; UIS.busy = true;
+  try {
+    const r = await sb.from("user_settings").select("key,data").eq("user_id", S.user.id).in("key", ["ui:common", uiDevKey()]);
+    if (!r.error) {
+      const m = {}; (r.data || []).forEach(x => { m[x.key] = x.data; });
+      const touched = JSON.stringify(uiPart()) !== UIS.boot;   // пользователь менял настройки до ответа облака — его выбор главнее
+      if (!touched && (m["ui:common"] || m[uiDevKey()])) uiApply(m["ui:common"], m[uiDevKey()]);
+      UIS.snap = touched ? UIS.boot : JSON.stringify(uiPart()); UIS.loaded = true;
+    }
+  } catch (e) {}
+  UIS.busy = false; if (UIS.loaded) uiPushSoon();
+}
+function uiPushSoon() { clearTimeout(UIS.timer); UIS.timer = setTimeout(uiPush, 1500); }
+async function uiPush() {
+  if (!UIS.loaded || typeof sb === "undefined" || !sb || !S.user || navigator.onLine === false) return;
+  const p = uiPart(), js = JSON.stringify(p); if (js === UIS.snap) return;
+  const ts = Date.now(), at = new Date().toISOString();
+  const rows = [{ key: "ui:common", data: Object.assign({ ts }, p.common) }, { key: uiDevKey(), data: Object.assign({ ts }, p.dev) }].map(x => Object.assign({ user_id: S.user.id, updated_at: at }, x));
+  try { const r = await sb.from("user_settings").upsert(rows, { onConflict: "user_id,key" }); if (!r.error) UIS.snap = js; } catch (e) {}
+}
 let view = jget(LSK.view, "all"), prevView = "all", selId = null;
 if (view === "planned") view = "all";   // вкладку «Запланировано» убрали
 try { const _ap = new URLSearchParams(location.search).get("app"); if (_ap === "journal" || _ap === "food") view = _ap; else if (_ap === "tasks" && (view === "journal" || view === "food")) view = "planned"; } catch (e) {}   // три ярлыка: ?app=journal|food|tasks
@@ -252,7 +290,7 @@ const ZOOMS = { xs: .78, s: .84, s2: .89, n: .93, n2: .97, l: 1, l2: 1.04, xl: 1
 const DENS = { compact: ["6px", "13px"], normal: ["10px", "14px"], cozy: ["14px", "15px"] };
 const TCOLORS = ["#111111", "#1e3a8a", "#14532d", "#7c2d12", "#581c87", "#7f1d1d", "#ffffff", "#fef3c7", "#bfdbfe", "#bbf7d0", "#fbcfe8"];
 const ACCENTS = ["#2564cf", "#0063b1", "#038387", "#498205", "#c19c00", "#ca5010", "#d13438", "#e3008c", "#8764b8", "#6366f1", "#69797e"];
-const saveTheme = () => jset(LSK.theme, TH);
+const saveTheme = () => { jset(LSK.theme, TH); uiPushSoon(); };
 function hexRgb(h) { h = String(h || "").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); const n = parseInt(h, 16); return isNaN(n) ? [37, 100, 207] : [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 const rgba = (h, a) => { const c = hexRgb(h); return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; };
 const shade = (h, f) => { const c = hexRgb(h).map(x => Math.max(0, Math.min(255, Math.round(f < 0 ? x * (1 + f) : x + (255 - x) * f)))); return "rgb(" + c.join(",") + ")"; };
@@ -5576,7 +5614,7 @@ function setUser(u) {
   const c = jget(LSK.cache, null);
   S.lists = {}; S.tasks = {}; S.time_log = {}; S.foods = {}; S.food_log = {}; S.weight_log = {}; S.user_settings = {};
   if (c && c.user && c.user.id === u.id) { S.lists = c.lists || {}; S.tasks = c.tasks || {}; S.time_log = c.time_log || {}; S.foods = c.foods || {}; S.food_log = c.food_log || {}; S.weight_log = c.weight_log || {}; S.user_settings = c.user_settings || {}; }
-  ui.msg = ""; ui.mfaGate = isOwnerNow() ? { wait: 1 } : null; render(); subRt(); setTimeout(loadAll, 0); if (ui.mfaGate) mfaCheck(); NG.at = 0; NG.rule = (NG.rule && NG.rule.uid === u.id) ? NG.rule : null; setTimeout(() => ngLoad(true), 1500);
+  ui.msg = ""; ui.mfaGate = isOwnerNow() ? { wait: 1 } : null; render(); subRt(); setTimeout(loadAll, 0); UIS.loaded = false; UIS.boot = JSON.stringify(uiPart()); setTimeout(uiPull, 800); if (ui.mfaGate) mfaCheck(); NG.at = 0; NG.rule = (NG.rule && NG.rule.uid === u.id) ? NG.rule : null; setTimeout(() => ngLoad(true), 1500);
 }
 async function logout() {
   if (pendCount() && !confirm("Есть неотправленные изменения (" + pendCount() + "). Выйти и потерять их?")) return;
@@ -7403,7 +7441,7 @@ function init() {
     b = document.createElement("div"); b.id = "offbar"; b.textContent = "📴 Нет сети — работаешь офлайн. Правки сохраняются на устройстве и уйдут, когда появится связь."; document.body.appendChild(b);
   };
   offBar(); netPill();
-  window.addEventListener("online", () => { offBar(); netPill(); if (S.user) flush().then(loadAll); });
+  window.addEventListener("online", () => { offBar(); netPill(); uiPull(); uiPushSoon(); if (S.user) flush().then(loadAll); });
   window.addEventListener("offline", () => { offBar(); netPill(); if (S.user) setSync("err", "офлайн"); });
   window.addEventListener("pagehide", () => { writeCache(); });
   let rz, lastW = innerWidth;   // перерисовка только при смене ШИРИНЫ: высота меняется от клавиатуры и вызывала «тряску» на экране входа
