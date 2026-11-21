@@ -1,4 +1,4 @@
-﻿package com.moidela.app;
+package com.moidela.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;

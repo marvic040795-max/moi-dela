@@ -1,4 +1,4 @@
-﻿package com.moidela.app;
+package com.moidela.app;
 
 import android.Manifest;
 import android.app.Activity;
