@@ -66,7 +66,7 @@ window.APP_CONFIG = {
 <script src="notes.js"></script>
 <script>(function () {
 "use strict";
-const BUILD = "21.11 15:06";
+const BUILD = "21.11 16:37";
 /* ===== p1: утилиты, конфиг, состояние, темы, иконки ===== */
 const LSK = { cfg: "mytasks_cfg_v1", theme: "mytasks_theme_v1", cache: "mytasks_cache_v1", pending: "mytasks_pending_v1", view: "mytasks_view_v1", prefs: "mytasks_prefs_v1", notified: "mytasks_notified_v1" };
 const jget = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
@@ -447,7 +447,8 @@ const FX2 = {
     requestAnimationFrame(tick); fx2End([c, cv], END + 800);
   },
   pen(row) {
-    const { c, r } = fxClone(row), tl = row.querySelector(".ttl"); if (!tl) return FX2.glass(row);
+    const tl = row.querySelector(".ttl"); if (!tl) return FX2.glass(row);
+    const { c, r } = fxClone(row);
     const tb = tl.getBoundingClientRect(), L = tb.left - r.left - 4, W = Math.min(tb.width, tl.scrollWidth) + 8, Y = tb.top - r.top + Math.min(tb.height, 24) / 2 + 1, n = 7;
     let d = "M" + L + " " + (Y + 2); for (let i = 1; i <= n; i++) { const x = L + W * i / n, y = Y + (i % 2 ? -2.5 : 2) + Math.random() * 1.5; d += " Q" + (x - W / n / 2) + " " + (y + (i % 2 ? -2 : 2)) + " " + x + " " + y; }
     const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("width", r.width); s.setAttribute("height", r.height); s.style.cssText = "position:absolute;left:0;top:0;overflow:visible";
@@ -485,7 +486,8 @@ const FX2 = {
     setTimeout(() => { const o = { duration: 600, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" }; c.animate([{ transform: "none", opacity: 1 }, { transform: "translateY(26px)", opacity: 0 }], o); st.animate([{ transform: "rotate(-12deg)", opacity: 1 }, { transform: "translateY(26px) rotate(-12deg)", opacity: 0 }], o); }, 650); fx2End([c, st], 1350);
   },
   wave(row) {
-    const { c } = fxClone(row), el = c.querySelector(".ttl"); if (!el) return FX2.glass(row);
+    if (!row.querySelector(".ttl")) return FX2.glass(row);
+    const { c } = fxClone(row), el = c.querySelector(".ttl");
     c.style.overflow = "visible"; el.style.overflow = "visible"; const txt = el.textContent; el.innerHTML = [...txt].map(ch => '<span style="display:inline-block;white-space:pre">' + esc(ch) + "</span>").join("");
     const sp = [...el.children], st = Math.min(22, 700 / Math.max(1, sp.length)), T = sp.length * st + 650;
     sp.forEach((s, i) => s.animate([{ transform: "none", opacity: 1 }, { transform: "translateY(" + (40 + Math.random() * 30) + "px) rotate(" + ((Math.random() - .3) * 80) + "deg)", opacity: 0 }], { duration: 650, delay: i * st, easing: "cubic-bezier(.55,0,.9,.4)", fill: "forwards" }));
@@ -5851,7 +5853,7 @@ const acts = {
     if (!r || ui.settings || r.getBoundingClientRect().width < 50 || r.getBoundingClientRect().top > innerHeight) {   // в настройках списка нет — показываем на демо-строке
       tmp = document.createElement("div"); tmp.className = "taskrow"; const w = Math.min(innerWidth - 32, 420);
       tmp.style.cssText = "position:fixed;left:" + (innerWidth - w) / 2 + "px;top:" + Math.round(innerHeight * .3) + "px;width:" + w + "px;z-index:8000;background:#fff;color:#222;padding:14px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;gap:12px;font-size:16px";
-      tmp.innerHTML = '<div class="rad" style="flex:none"></div><span>Пример задачи</span>'; document.body.appendChild(tmp); r = tmp;
+      tmp.innerHTML = '<div class="rad" style="flex:none"></div><span class="ttl">Пример задачи</span>'; document.body.appendChild(tmp); r = tmp;
     }
     themeFx("done", r, true); if (tmp) setTimeout(() => tmp.remove(), 60);
   },
