@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 final class W {
     static Intent openApp(Context c) {
-        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://moi-dela.pages.dev/?app=tasks")).setPackage(c.getPackageName());
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://moi-dela-app.pages.dev/?app=tasks")).setPackage(c.getPackageName());
         return i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
