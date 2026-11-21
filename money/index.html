@@ -393,7 +393,7 @@ const CFG = { url: "https://rjiuialimbrnbriqafjl.supabase.co", key: "sb_publisha
 let sb = null, user = null, cats = jget(LS.cats, []), txs = jget(LS.tx, []).map(unpackTx), pend = jget(LS.pend, []), PR = Object.assign({ theme: "gray", acc: "#81c995", iset: "line", normN: 6, normOn: true }, jget(LS.pref, {}));
 let ui = { tab: "home", kind: "exp", rg: { t: "m", a: Date.now() }, view: "ring", open: {}, sheet: null, status: "", q: "", set: "main" };
 let flushing = false;
-const savePR = () => jset(LS.pref, PR);
+const savePR = () => { jset(LS.pref, PR); finSyncSoon(); };
 const THEMES = [["gray", "Серая", "#424242", "#616161"], ["black", "Чёрная", "#000000", "#171717"], ["light", "Светлая", "#f2f3f5", "#e3e6ec"], ["navy", "Синяя", "#141a2c", "#1f2742"], ["forest", "Лесная", "#14201a", "#1d3328"], ["plum", "Сливовая", "#1d1626", "#2e2140"], ["sand", "Песок", "#f4efe6", "#e6dccb"], ["cream", "Кремовая", "#fbf6e6", "#f1e9d0"], ["beige", "Бежевая", "#e8dcc8", "#d9c9ae"], ["mint", "Мятная", "#eaf3ee", "#d6e7dd"], ["sky", "Небесная", "#eaf1f8", "#d5e2f0"], ["rose", "Розовая", "#f8ecee", "#efd7db"], ["lav", "Лавандовая", "#efeaf6", "#e0d7ee"], ["nku", "Щитовая НКУ", "#1f2326", "#2e3439"]], ACCS = ["#81c995", "#6fd1c4", "#6aa8ff", "#a78bfa", "#f2b36d", "#e88fc4", "#b6d96a", "#ff8f6b", "#ffd54f", "#4dd0e1", "#9fa8ff", "#ff7a90", "#c5e1a5", "#ffab40", "#2e9e5b", "#1f7ae0", "#7c4dff", "#d6336c", "#c2410c", "#0f766e", "#8d6e63", "#90a4ae"];
 function applyTheme() { if (PR.theme === "dark") PR.theme = "gray"; const th = THEMES.find(t => t[0] === PR.theme) || THEMES[0]; document.documentElement.dataset.t = th[0]; document.documentElement.style.setProperty("--acc", PR.acc); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = th[3]; }
 function toast(t, cls, ms) { document.querySelectorAll(".toast").forEach(x => x.remove()); const e = document.createElement("div"); e.className = "toast " + (cls || ""); e.textContent = String(t).replace(/\n+/g, " · "); e.style.pointerEvents = "auto"; e.dataset.t = Date.now(); e.onclick = () => e.remove(); document.body.appendChild(e); setTimeout(() => e.remove(), ms || 1400); }
@@ -985,6 +985,7 @@ function moreHTML() {
     '<div class="set" style="display:block"><div style="margin-bottom:8px">Акцентный цвет <span class="sub" style="font-size:.8em">— месяцы, бейджи, сумма, «+»</span></div><div class="pal">' + ACCS.map(c => '<i data-a="acc" data-v="' + c + '" class="' + (PR.acc === c ? "on" : "") + '" style="background:' + c + '"></i>').join("") + "</div></div>" +
     '<label class="set"><span>📥</span><span style="flex:1">Импорт из Monefy (CSV)</span><input type="file" id="csvf" accept=".csv,.txt,text/csv" hidden></label>' +
     '<button class="set" data-a="export"><span>📤</span><span style="flex:1">Экспорт в CSV</span></button>' +
+    '<label class="set"><span>♻️</span><span style="flex:1">Восстановить настройки из копии (JSON)</span><input type="file" id="jsonf" accept=".json,application/json" hidden></label>' +
     '<button class="set" data-a="exportjson"><span>💾</span><span style="flex:1">Резервная копия (JSON)</span></button>' +
     '<button class="set" data-a="fullsync"><span>🔄</span><span style="flex:1">Полная синхронизация</span></button>' +
     '<a class="set" href="https://moi-dela-app.pages.dev/" style="color:inherit;text-decoration:none"><span>✅</span><span style="flex:1">Мои дела</span></a>' +
@@ -1051,7 +1052,7 @@ function catsMgrHTML() {
 
 /* ============ шаблоны и повторяющиеся (локально на устройстве) ============ */
 let EXT = { tpl: [], rec: [], due: [] }; try { const x = JSON.parse(localStorage.getItem("fin_ext_v1") || "{}"); EXT = { tpl: x.tpl || [], rec: x.rec || [], due: x.due || [] }; } catch (e) {}
-const saveExt = () => { try { localStorage.setItem("fin_ext_v1", JSON.stringify(EXT)); } catch (e) {} };
+const saveExt = () => { try { localStorage.setItem("fin_ext_v1", JSON.stringify(EXT)); } catch (e) {}  finSyncSoon(); };
 function runRec() {
   if (!user || !cats.length) return; let n = 0; const td = dayKey(new Date()), now = new Date();
   EXT.rec.forEach(r => {
@@ -1734,6 +1735,17 @@ document.addEventListener("change", async e => {
     if (e.target.id === "r-merge") return;
     const l = document.querySelector(".rcp .rl"), y = l ? l.scrollTop : 0; render(); const l2 = document.querySelector(".rcp .rl"); if (l2) l2.scrollTop = y; return;
   }
+  if (e.target.id === "jsonf" && e.target.files[0]) {
+    try {
+      const d = JSON.parse(await e.target.files[0].text()); if (d.app !== "traty") throw new Error("Это не копия «Трат»");
+      if (!d.ext && !d.prefs) throw new Error("В копии нет настроек и шаблонов");
+      if (d.ext) { EXT = { tpl: d.ext.tpl || [], rec: d.ext.rec || [], due: d.ext.due || [] }; saveExt(); }
+      if (d.prefs) { Object.keys(PR).forEach(n => delete PR[n]); Object.assign(PR, { theme: "gray", acc: "#81c995", iset: "line", normN: 6, normOn: true }, d.prefs); savePR(); applyTheme(); }
+      ui.sheet = null; render(); toast("Настройки и шаблоны восстановлены (траты и категории тянутся из облака)");
+    } catch (err) { toast(err.message || "Не удалось прочитать файл"); }
+    e.target.value = "";
+    return;
+  }
   if (e.target.id === "csvf" && e.target.files[0]) {
     try { const p = prepImport(decodeBuf(await e.target.files[0].arrayBuffer())); IMP = p; const ds = p.out.map(x => +x.d), mn = new Date(Math.min(...ds)), mx = new Date(Math.max(...ds)), cn = new Set(p.out.map(x => x.cat)).size;
       ui.sheet = { type: "imp", busy: false, info: "Операций: <b>" + p.out.length + "</b><br>Период: " + dayKey(mn) + " … " + dayKey(mx) + "<br>Категорий: " + cn + "<br>" + (p.neg > 0 ? "Минус = расход, плюс = доход (" + p.neg + " / " + p.pos + ")" : "Все суммы положительные — считаю расходами") + (p.bad ? "<br>Не разобрано строк: " + p.bad : "") + "<br><span class='sub'>Повторный импорт дубли не создаёт.</span>" }; render(); }
@@ -1754,6 +1766,45 @@ async function rcpShared() {
     rcpText(text, { subject: j.title || "" });
   } catch (e) { toast("Не получилось принять письмо: " + (e.message || e), "bad", 4000); }
 }
+/* ---- настройки и шаблоны в облаке (user_settings: fin:pref = PR, fin:ext = EXT) — чтобы при смене домена/устройства всё подтягивалось само.
+   Правила: облако пустое → заливаем локальное; локально ничего не менялось с последней синхронизации → берём облако; менял локально → локальное главнее. ---- */
+const FSY = { loaded: false, busy: false, timer: 0 }, FSY_SNAP = "fin_cloudsnap_v1";
+const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === "object" && !Array.isArray(x)) ? Object.keys(x).sort().reduce((o, n) => (o[n] = x[n], o), {}) : x);   // jsonb переставляет ключи — сравниваем без учёта порядка
+const finParts = () => ({ "fin:pref": PR, "fin:ext": EXT });
+function finApply(k, d) {
+  const x = Object.assign({}, d); delete x.ts;
+  if (k === "fin:pref") { Object.keys(PR).forEach(n => delete PR[n]); Object.assign(PR, { theme: "gray", acc: "#81c995", iset: "line", normN: 6, normOn: true }, x); jset(LS.pref, PR); }
+  else { EXT = { tpl: x.tpl || [], rec: x.rec || [], due: x.due || [] }; try { localStorage.setItem("fin_ext_v1", JSON.stringify(EXT)); } catch (e) {} }
+}
+async function finPull() {
+  if (FSY.loaded || FSY.busy || !sb || !user) return; FSY.busy = true;
+  try {
+    const r = await sb.from("user_settings").select("key,data").eq("user_id", user.id).in("key", ["fin:pref", "fin:ext"]);
+    if (!r.error) {
+      const m = {}; (r.data || []).forEach(x => { m[x.key] = x.data; });
+      const snap = jget(FSY_SNAP, {}); let changed = false;
+      Object.keys(finParts()).forEach(k => {
+        const c = m[k]; if (!c) return;                                   // в облаке пусто — локальное зальётся в finPush
+        const js = canon(finParts()[k]);
+        if (snap[k] !== undefined && snap[k] !== js) return;              // локальные правки после последней синхронизации — главнее
+        const a = Object.assign({}, c); delete a.ts;
+        if (canon(a) !== js) { finApply(k, c); changed = true; }
+        snap[k] = canon(finParts()[k]);
+      });
+      jset(FSY_SNAP, snap); FSY.loaded = true;
+      if (changed) { try { applyTheme(); } catch (e) {} render(); }
+    }
+  } catch (e) {}
+  FSY.busy = false; if (FSY.loaded) finSyncSoon();
+}
+function finSyncSoon() { clearTimeout(FSY.timer); FSY.timer = setTimeout(finPush, 1500); }
+async function finPush() {
+  if (!FSY.loaded || !sb || !user || navigator.onLine === false) return;
+  const snap = jget(FSY_SNAP, {}), cur = finParts(), rows = [], at = new Date().toISOString(), ts = Date.now();
+  Object.keys(cur).forEach(k => { const js = canon(cur[k]); if (snap[k] !== js) rows.push({ k, js, row: { user_id: user.id, key: k, data: Object.assign({ ts }, cur[k]), updated_at: at } }); });
+  if (!rows.length) return;
+  try { const r = await sb.from("user_settings").upsert(rows.map(x => x.row), { onConflict: "user_id,key" }); if (!r.error) { rows.forEach(x => { snap[x.k] = x.js; }); jset(FSY_SNAP, snap); } } catch (e) {}
+}
 (async function boot() {
   applyTheme();
   let early = false; try { const raw = JSON.parse(localStorage.getItem("mytasks-auth") || "null"); if (raw && raw.user && raw.user.id) { user = raw.user; early = true; render(); } } catch (e) {}   // мгновенный первый кадр из локальных данных, не дожидаясь сети и библиотеки
@@ -1768,10 +1819,10 @@ async function rcpShared() {
     if (off) { user = eu; window.addEventListener("online", () => { sb.auth.getSession().then(r => { if (!r.data.session) { user = null; render(); } }).catch(() => {}); flush(); pull(false); }, { once: true }); }
   }
   if (!early || !user) render(); if (!user) return;
-  runRec(); flush(); pull(!txs.length); pullP();
+  runRec(); flush(); pull(!txs.length); pullP(); finPull();
   rcpShared(); inboxPull(); setInterval(inboxPull, 120000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { runRec(); flush(); pull(false); inboxPull(); pullP(); } });
-  window.addEventListener("online", () => { flush(); pull(false); });
+  window.addEventListener("online", () => { flush(); pull(false); finPull(); finSyncSoon(); });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
 </script>

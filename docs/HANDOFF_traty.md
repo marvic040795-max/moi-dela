@@ -2,7 +2,7 @@
 
 ## Р§С‚Рѕ СЌС‚Рѕ
 Р›РёС‡РЅРѕРµ offline-first PWA, Р·Р°РјРµРЅР° Monefy. РџР°РїРєР° `money/` РІ СЂРµРїРѕР·РёС‚РѕСЂРёРё `marvic040795-max/moi-dela` (РІРµС‚РєР° main в†’ Cloudflare Pages, РґРµРїР»РѕР№ Р°РІС‚РѕРјР°С‚РѕРј РїРѕСЃР»Рµ push).
-- РџСЂРѕРґ: https://moi-dela-money.pages.dev
+- РџСЂРѕРґ: https://moi-traty.pages.dev
 - Р Р°Р±РѕС‡Р°СЏ РєРѕРїРёСЏ: `/home/claude/moi-dela` (РІ РЅРѕРІРѕРј С‡Р°С‚Рµ: РєР»РѕРЅРёСЂРѕРІР°С‚СЊ СЂРµРїРѕ Р·Р°РЅРѕРІРѕ С‡РµСЂРµР· add_repo/gh)
 - РћРґРёРЅ С„Р°Р№Р» `money/index.html` (~165 РљР‘, inline JS/CSS) + `supabase-lib.js`, `sw.js`, `manifest.json`, РёРєРѕРЅРєРё.
 - Supabase РїСЂРѕРµРєС‚ `rjiuialimbrnbriqafjl`; РІС…РѕРґ С‚РµРј Р¶Рµ Р°РєРєР°СѓРЅС‚РѕРј, С‡С‚Рѕ РІ В«РњРѕРёС… РґРµР»Р°С…В» (`storageKey:"mytasks-auth"`). РўР°Р±Р»РёС†С‹ `fin_categories` (РµСЃС‚СЊ РєРѕР»РѕРЅРєР° `lim` вЂ” Р»РёС‡РЅС‹Р№ Р»РёРјРёС‚), `fin_tx`.
