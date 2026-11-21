@@ -1553,7 +1553,7 @@ const A = {
   setday() { const v = $("rg-d").value; if (!v) return; ui.rg = { t: "d", a: +new Date(v + "T12:00") }; ui.sheet = null; render(); },
   mprev() { slide(-1); }, mnext() { slide(1); },
   pickrange() { ui.sheet = { type: "rg" }; render(); },
-  setrg(a) { const t = a.dataset.v; ui.rg = { t, a: t === "all" ? Date.now() : ui.rg.a || Date.now() }; ui.sheet = null; render(); },
+  setrg(a) { const t = a.dataset.v, now = Date.now(); let an = ui.rg.a || now; if (ui.rg.t !== "all" && ui.rg.t !== "int") { const B = rgBounds(ui.rg); if (now >= B[0] && now < B[1]) an = now; } ui.rg = { t, a: t === "all" ? now : an }; ui.sheet = null; render(); },   // текущий период → «день/неделя» открываются на сегодня, а не на 1-е число
   setint() { const a = $("rg-a").value, b = $("rg-b").value; if (!a || !b) return; ui.rg = a === b ? { t: "d", a: +new Date(a + "T12:00") } : { t: "int", a: +new Date(a + "T12:00"), from: new Date(a + "T12:00"), to: new Date((b < a ? a : b) + "T12:00") }; if (b < a) ui.rg.from = new Date(b + "T12:00"); ui.sheet = null; render(); },
   kindtog() { ui.kind = ui.kind === "exp" ? "inc" : "exp"; render(); },
   viewtog() { ui.view = ui.view === "list" ? "ring" : "list"; render(); },
