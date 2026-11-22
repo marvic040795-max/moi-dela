@@ -342,6 +342,10 @@ table.hm td{background-color:transparent}
 .fsvn{display:flex;gap:6px}.fsvn input{flex:1;min-width:0;background:var(--card);border-radius:10px;padding:10px;font-size:14px;border:1px solid var(--ln);color:var(--tx);outline:0}.fsvn button{padding:0 12px;border-radius:10px;background:var(--card2);font-weight:600;font-size:13px;white-space:nowrap}
 .fsvl{margin-top:6px}.fsvl div{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 4px 4px;font-size:13.5px}.fsvl button{width:34px;height:30px;color:var(--sub);border-radius:8px}
 .sub-r.fqgo{color:var(--acc);justify-content:flex-start}.sub-r.fqgo .t{color:var(--acc)}
+.fgh{padding-top:6px;padding-bottom:3px;gap:6px}.fgh .fgt{flex:1;min-width:0;display:flex;align-items:center;gap:6px;text-align:left;color:var(--tx);font-weight:600;font-size:12.5px;padding:6px 0}.fgh .fgl small{font-weight:500}
+.fgc{width:7px;height:7px;border-right:2px solid var(--sub);border-bottom:2px solid var(--sub);transform:rotate(-45deg);transition:transform .2s;flex:none;margin:0 3px 0 1px}.fgc.up{transform:rotate(45deg)}
+.fai{flex:none;padding:3px 9px;border-radius:12px;background:color-mix(in srgb,var(--acc) 20%,var(--card));color:var(--tx);font-size:11.5px;font-weight:600;white-space:nowrap}
+.ftool{flex-wrap:wrap;row-gap:2px}.ftool .fseg{width:100%}.ftool .fseg button{flex:1;padding:5px 4px}.ftool .fsl{order:1;margin-right:auto}.ftool .fsr{order:2;margin-left:0}
 </style>
 </head>
 <body>
@@ -968,7 +972,7 @@ function txRow(t) {
    sh — сдвиг стрелками, cats/cx — категории (cx = «кроме»), k — exp|inc|all, min/max — сумма, dw — дни недели [вс..сб], cmp — сравнение. */
 const QP = [["m0", "Этот месяц"], ["m1", "Прошлый месяц"], ["m3", "3 месяца"], ["m6", "6 месяцев"], ["m12", "12 месяцев"], ["y0", "Этот год"], ["y1", "Прошлый год"], ["all", "Всё время"], ["int", "Свой…"]];
 const qDef = () => ({ p: "", sh: 0, cats: [], cx: false, k: "exp", min: "", max: "", dw: null, cmp: true });
-ui.f = qDef(); ui.fg = "d"; ui.fs = "d"; ui.qn = 150; ui.sel = null;
+ui.f = qDef(); ui.fg = "d"; ui.fs = "d"; ui.qn = 150; ui.sel = null; ui.fo = {};
 const qPl = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + " " + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c); };
 const nzQ = x => String(x == null ? "" : x).toLowerCase().replace(/ё/g, "е");
 const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1108,24 +1112,72 @@ function qRowHTML(t, terms, sel, showD, noCat) {
   const main = nm ? '<b class="sn">' + qHl(nm, terms) + "</b><small>" + (noCat ? dt : qHl(c.name, terms) + (dt ? " · " + dt : "")) + "</small>" : "<b>" + qHl(c.name, terms) + "</b>" + (dt ? "<small>" + dt + "</small>" : "");
   return '<button class="row rq' + (on ? " fon" : "") + '" data-a="' + (sel ? "qsel" : "edit") + '" data-id="' + t.id + '">' + (sel ? '<span class="fck' + (on ? " on" : "") + '">' + (on ? "✓" : "") + "</span>" : "") + '<div class="ci">' + ic(c.icon, c.color, 32) + '</div><div class="t">' + main + '</div><div class="a ' + t.kind + '">' + qSgn(t.kind, fm(t.amount)) + "</div></button>";
 }
+/* ---- подгруппы «по смыслу»: PR.sg[категория] = { m: { ключ заметки → подгруппа }, at } ---- */
+const sgKey = n => nzQ(n).replace(/[\d.,:;!?()«»"'+*\/\\№#%-]+/g, " ").replace(/\s+/g, " ").trim();
+const SGX = {};
+function sgIdx(cat) {   // слова-основы (5 букв) → подгруппа, чтобы новые похожие заметки попадали в уже известные подгруппы без нового запроса
+  const e = PR.sg && PR.sg[cat]; if (!e) return null; const n = Object.keys(e.m).length; let x = SGX[cat];
+  if (x && x.at === e.at && x.n === n) return x;
+  const cnt = {}; Object.keys(e.m).forEach(k => k.split(" ").forEach(w => { if (w.length >= 4) { const st = w.slice(0, 5), g = e.m[k], o = cnt[st] || (cnt[st] = {}); o[g] = (o[g] || 0) + 1; } }));
+  const ix = {}; Object.keys(cnt).forEach(st => { const o = cnt[st], gs = Object.keys(o); if (gs.length === 1) ix[st] = gs[0]; });   // основа, встречающаяся в разных подгруппах, неоднозначна — не используем
+  return SGX[cat] = { at: e.at, n, ix };
+}
+function sgOf(t) {   // null — категория не разобрана; "" — заметка есть, но подгруппа неизвестна
+  const cat = t.category_id || "_", e = PR.sg && PR.sg[cat]; if (!e) return null;
+  const k = sgKey(t.note); if (!k) return "Без заметки"; if (e.m[k]) return e.m[k];
+  const ix = sgIdx(cat).ix, ws = k.split(" ");
+  for (const w of ws) if (w.length >= 4 && ix[w.slice(0, 5)]) return ix[w.slice(0, 5)];
+  return "";
+}
+const QSRT = [["d", "Сначала новые"], ["da", "Сначала старые"], ["a", "Сумма: большие сверху"], ["as", "Сумма: малые сверху"], ["n", "Название А → Я"], ["nr", "Название Я → А"], ["f", "Частые названия сверху"]];
+const SRTL = { d: "↓ дата", da: "↑ дата", a: "↓ сумма", as: "↑ сумма", n: "А→Я", nr: "Я→А", f: "частые" };
+function qSorter(arr) {
+  const byD = (a, b) => b.ts.localeCompare(a.ts), nm = t => sgKey(t.note) || nzQ(catOf(t.category_id).name), fs = ui.fs;
+  if (fs === "da") return (a, b) => -byD(a, b);
+  if (fs === "a") return (a, b) => b.amount - a.amount || byD(a, b);
+  if (fs === "as") return (a, b) => a.amount - b.amount || byD(a, b);
+  if (fs === "n" || fs === "nr") return (a, b) => { const r = nm(a).localeCompare(nm(b), "ru"); return (fs === "n" ? r : -r) || byD(a, b); };
+  if (fs === "f") { const c = {}; arr.forEach(t => { const k = sgKey(t.note); c[k] = (c[k] || 0) + 1; }); return (a, b) => (c[sgKey(b.note)] || 0) - (c[sgKey(a.note)] || 0) || nm(a).localeCompare(nm(b), "ru") || byD(a, b); }
+  return byD;
+}
 function listBody() {
   const f = ui.f, arr = qMatch(f), terms = qTerms(ui.q), sel = ui.sel;
   let h = qBarHTML(f) + qSumHTML(f, arr);
   if (f.k !== "all") { const ok = f.k === "exp" ? "inc" : "exp", on = qMatch(f, { kind: ok }).length; if (on && (ui.q || "").trim()) h += '<button class="fhint" data-a="qkset" data-v="all">' + (arr.length ? "Ещё " : "Нашлось ") + qPl(on, "совпадение", "совпадения", "совпадений") + " в " + (ok === "inc" ? "доходах" : "расходах") + " — показать</button>"; }
   if (!arr.length) return h + '<div class="empty">' + (txs.length ? "Ничего не нашлось. Попробуй другой период или сними фильтры" : "Операций пока нет") + "</div>" + (qActive(f) ? '<div style="text-align:center"><button class="btn g" data-a="qreset">Сбросить фильтры</button></div>' : "");
-  h += '<div class="ftool">' + (sel ? '<button class="fsl" data-a="qselall">✓ Выбрать все ' + arr.length + '</button><button class="fsr" data-a="qselend">Отмена</button>' : '<div class="fseg">' + [["d", "Дни"], ["m", "Месяцы"], ["c", "Категории"]].map(x => '<button data-a="qgrp" data-v="' + x[0] + '"' + (ui.fg === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fsr" data-a="qsort">↓ ' + (ui.fs === "a" ? "сумма" : "дата") + '</button><button class="fsl" data-a="qselon">Выбрать</button>') + "</div>";
-  const byD = (a, b) => b.ts.localeCompare(a.ts), by = ui.fs === "a" ? (a, b) => b.amount - a.amount || byD(a, b) : byD, G = [], gm = new Map(), g = ui.fg;
-  arr.slice().sort(byD).forEach(t => { const d = new Date(t.ts), k = g === "c" ? (t.category_id || "_") : g === "m" ? mk(d) : dayKey(d); let x = gm.get(k); if (!x) { x = { k, items: [], s: 0 }; gm.set(k, x); G.push(x); } x.items.push(t); x.s += t.kind === "exp" ? -t.amount : t.amount; });
-  if (g === "c") G.sort((a, b) => Math.abs(b.s) - Math.abs(a.s));
+  h += '<div class="ftool">' + (sel ? '<button class="fsl" data-a="qselall">✓ Выбрать все ' + arr.length + '</button><button class="fsr" data-a="qselend">Отмена</button>' : '<div class="fseg">' + [["d", "Дни"], ["m", "Месяцы"], ["c", "Категории"], ["s", "🧠 Смысл"]].map(x => '<button data-a="qgrp" data-v="' + x[0] + '"' + (ui.fg === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fsr" data-a="qsheet" data-v="qsrt">' + (SRTL[ui.fs] || "↓ дата") + '</button><button class="fsl" data-a="qselon">Выбрать</button>') + "</div>";
+  const by = qSorter(arr), byD = (a, b) => b.ts.localeCompare(a.ts), G = [], gm = new Map();
+  let g = ui.fg; const flat = g === "d" && ui.fs !== "d" && ui.fs !== "da";   // сортировка не по дате + группы по дням = бессмыслица → один общий список
+  const multi = new Set(arr.map(t => t.category_id || "_")).size > 1;
+  arr.slice().sort(byD).forEach(t => {
+    const d = new Date(t.ts), cat = t.category_id || "_"; let k, sgn = null;
+    if (flat) k = "all"; else if (g === "c") k = cat; else if (g === "m") k = mk(d); else if (g === "s") { sgn = sgOf(t); k = cat + "|" + (sgn == null ? "" : sgn || "Не разобрано"); sgn = sgn == null ? "" : sgn || "Не разобрано"; } else k = dayKey(d);
+    let x = gm.get(k); if (!x) { x = { k, items: [], s: 0, cat, sg: sgn, keys: new Set(), un: 0 }; gm.set(k, x); G.push(x); } x.items.push(t); x.s += t.kind === "exp" ? -t.amount : t.amount; x.keys.add(sgKey(t.note));
+  });
+  if (flat) g = "f";
+  const nmA = x => g === "s" ? (x.sg || catOf(x.cat === "_" ? null : x.cat).name) : g === "c" ? catOf(x.k === "_" ? null : x.k).name : "";
+  if (g === "c" || g === "s") G.sort((a, b) => ui.fs === "n" || ui.fs === "nr" ? (ui.fs === "n" ? 1 : -1) * nmA(a).localeCompare(nmA(b), "ru") : Math.abs(b.s) - Math.abs(a.s));
   let n = 0; const lim = ui.qn || 150, cy = new Date().getFullYear();
   for (const x of G) {
     if (n >= lim) break;
-    let lb; if (g === "c") { const c = catOf(x.k === "_" ? null : x.k); lb = '<span class="fgl">' + ic(c.icon, c.color, 18) + esc(c.name) + " <i>" + x.items.length + "</i></span>"; } else if (g === "m") { lb = monLabel(x.k) + ' <i class="fgn">' + x.items.length + "</i>"; } else { const d = new Date(x.k + "T12:00"); lb = WD[d.getDay()] + ", " + d.getDate() + " " + MONS_S[d.getMonth()] + (d.getFullYear() !== cy ? " " + d.getFullYear() : ""); }
-    h += '<div class="fdh"><span>' + lb + "</span><span>" + (x.s < 0 ? "−" : "+") + fmN(Math.abs(x.s)) + " ₽</span></div>";
-    const it = x.items.slice().sort(by).slice(0, lim - n); n += it.length; h += it.map(t => qRowHTML(t, terms, sel, g !== "d", g === "c")).join("");
+    const cc = catOf(x.cat === "_" ? null : x.cat); let lb, open = true, aiBtn = "";
+    if (g === "f") lb = "Все операции";
+    else if (g === "c") { lb = '<span class="fgl">' + ic(cc.icon, cc.color, 18) + esc(cc.name) + " <i>" + x.items.length + "</i></span>"; }
+    else if (g === "m") { lb = monLabel(x.k) + ' <i class="fgn">' + x.items.length + "</i>"; }
+    else if (g === "s") {
+      const un = x.sg === "Не разобрано", mapped = !!(PR.sg && PR.sg[x.cat]);
+      lb = '<span class="fgl">' + ic(cc.icon, cc.color, 18) + esc(x.sg || cc.name) + (x.sg && multi ? ' <small class="sub">' + esc(cc.name) + "</small>" : "") + " <i>" + x.items.length + "</i></span>";
+      if ((!mapped && x.keys.size >= 6) || un) aiBtn = '<button class="fai" data-a="qai" data-id="' + x.cat + '">🧠 ' + (mapped ? "Дообучить" : "Разобрать по смыслу") + "</button>";
+      const ov = ui.fo[x.k]; open = ov === undefined ? G.length === 1 : !!ov;
+    } else { const d = new Date(x.k + "T12:00"); lb = WD[d.getDay()] + ", " + d.getDate() + " " + MONS_S[d.getMonth()] + (d.getFullYear() !== cy ? " " + d.getFullYear() : ""); }
+    const sm = (x.s < 0 ? "−" : "+") + fmN(Math.abs(x.s)) + " ₽";
+    if (g === "s") h += '<div class="fdh fgh"><button class="fgt" data-a="qgtog" data-k="' + esc(x.k) + '" data-open="' + (open ? 1 : 0) + '"><span class="fgc' + (open ? " up" : "") + '"></span>' + lb + "</button>" + aiBtn + "<span>" + sm + "</span></div>";
+    else h += '<div class="fdh"><span>' + lb + "</span><span>" + sm + "</span></div>";
+    if (!open) continue;
+    const it = x.items.slice().sort(by).slice(0, lim - n); n += it.length; h += it.map(t => qRowHTML(t, terms, sel, g !== "d", g === "c" || g === "s")).join("");
   }
-  ui._qmore = arr.length > n; if (ui._qmore) h += '<button class="btn g fmore" data-a="qmore">Показать ещё (осталось ' + (arr.length - n) + ")</button>";
-  if (sel) { const S = arr.filter(t => sel[t.id]), se = sumBy(S, t => t.kind === "exp" ? t.amount : 0), si = sumBy(S, t => t.kind === "inc" ? t.amount : 0); h += '<div style="height:84px"></div><div class="fselbar"><b>Выбрано ' + S.length + "<small>" + (se ? "−" + fmN(se) + " ₽" : "") + (se && si ? " · " : "") + (si ? "+" + fmN(si) + " ₽" : "") + "</small></b>" + '<button data-a="qsheet" data-v="qmv"' + (S.length ? "" : " disabled") + "><i>🏷</i>Категория</button><button data-a=\"qxl\"" + (S.length ? "" : " disabled") + '><i>📋</i>В Excel</button><button data-a="qsheet" data-v="qdel"' + (S.length ? "" : " disabled") + "><i>🗑</i>Удалить</button></div>"; }
+  ui._qmore = arr.length > n && G.length > 0 && (g !== "s" || n > 0); if (ui._qmore) h += '<button class="btn g fmore" data-a="qmore">Показать ещё (осталось ' + (arr.length - n) + ")</button>";
+  if (sel) { const S = arr.filter(t => sel[t.id]), se = sumBy(S, t => t.kind === "exp" ? t.amount : 0), si = sumBy(S, t => t.kind === "inc" ? t.amount : 0); h += '<div style="height:84px"></div><div class="fselbar"><b>Выбрано ' + S.length + "<small>" + (se ? "−" + fmN(se) + " ₽" : "") + (se && si ? " · " : "") + (si ? "+" + fmN(si) + " ₽" : "") + "</small></b>" + '<button data-a="qsheet" data-v="qmv"' + (S.length ? "" : " disabled") + "><i>🏷</i>Категория</button><button data-a=\"qsheet\" data-v=\"qsg\"" + (S.length ? "" : " disabled") + "><i>🧠</i>Подгруппа</button><button data-a=\"qxl\"" + (S.length ? "" : " disabled") + '><i>📋</i>Excel</button><button data-a="qsheet" data-v="qdel"' + (S.length ? "" : " disabled") + "><i>🗑</i>Удалить</button></div>"; }
   else h += '<div style="height:24px"></div>';
   return h;
 }
@@ -1139,6 +1191,13 @@ function qSheetHTML(s) {
     return wrap("Период поиска", '<div class="fpg">' + QP.map(x => '<button data-a="qpp" data-v="' + x[0] + '"' + ((s.int ? x[0] === "int" : x[0] === cur && !!ui.f.p) ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>" +
       (s.int || cur === "int" ? '<div class="fivl"><label><small>с</small><input type="date" id="qa" value="' + a + '"></label><span class="sub">—</span><label><small>по</small><input type="date" id="qb" value="' + b + '"></label></div><div class="okb"><button class="btn" data-a="qint">Показать</button></div>' : "") +
       '<div class="sub fnote">Свой период, не зависит от главной. Стрелки ‹ › у чипа листают его назад и вперёд.' + (ui.f.p ? "" : "<br>Сейчас стоит «авто»: без запроса — этот месяц, с запросом — всё время.") + "</div>", ui.f.p ? '<button class="fsm" data-a="qpp" data-v="">Авто</button>' : "");
+  }
+  if (s.type === "qsrt") {
+    return wrap("Сортировка", '<div class="fcl">' + QSRT.map(x => '<button class="fcr" data-a="qsrtset" data-v="' + x[0] + '"><span class="fck' + (ui.fs === x[0] ? " on" : "") + '">' + (ui.fs === x[0] ? "✓" : "") + '</span><span class="nm">' + x[1] + "</span></button>").join("") + '</div><div class="sub fnote">Если выбрана не дата, а группировка «Дни», список показывается одним общим списком.</div>');
+  }
+  if (s.type === "qsg") {
+    const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]), cat = S.length ? (S[0].category_id || "_") : "_", SS = S.filter(t => (t.category_id || "_") === cat && sgKey(t.note)), e = PR.sg && PR.sg[cat], names = e ? [...new Set(Object.values(e.m))].sort((a, b) => a.localeCompare(b, "ru")) : [];
+    return wrap("Подгруппа для " + qPl(SS.length, "траты", "трат", "трат"), (S.length > SS.length ? '<div class="sub fnote">Беру только траты с заметкой из категории «' + esc(catOf(S[0].category_id).name) + "».</div>" : "") + '<div class="fcl">' + names.map(n => '<button class="fcr" data-a="qsgset" data-g="' + esc(n) + '"><span class="nm">' + esc(n) + "</span></button>").join("") + '</div><div class="flbl">Новая подгруппа</div><div class="fsvn"><input id="qsgn" autocomplete="off" placeholder="Название"><button data-a="qsgnew">Создать</button></div><div class="sub fnote">Запомнится по названию заметки: такие же траты потом попадут туда сами.</div>');
   }
   if (s.type === "qkind") {
     return wrap("Что искать", '<div class="fpg k3">' + [["exp", "Расходы"], ["inc", "Доходы"], ["all", "Всё вместе"]].map(x => '<button data-a="qkset" data-v="' + x[0] + '"' + (ui.f.k === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>");
@@ -1177,13 +1236,40 @@ function qSheetHTML(s) {
 }
 function qReadX() { const s = ui.sheet; if (!s || s.type !== "qx") return; const a = $("qmin"), b = $("qmax"), n = $("qsvn"); if (a) s.f.min = a.value.trim(); if (b) s.f.max = b.value.trim(); if (n) s.svn = n.value; }
 function qXBtn() { const s = ui.sheet, b = $("qxb"); if (b && s) b.textContent = "Показать " + qCount(Object.assign({}, ui.f, { min: s.f.min, max: s.f.max, dw: s.f.dw })); }
-function qSet(ch) { Object.assign(ui.f, ch); ui.qn = 150; ui.sheet = null; render(); }
-function qGo(q, f) { ui.tab = "list"; ui.view = "ring"; ui.set = "main"; ui.menu = false; ui.sheet = null; ui.sel = null; ui.q = q || ""; ui.f = Object.assign(qDef(), f || {}); ui.qn = 150; render(); const m = $("main"); if (m) m.scrollTop = 0; }
+function qSet(ch) { Object.assign(ui.f, ch); ui.qn = 150; ui.fo = {}; ui.sheet = null; render(); }
+function qGo(q, f) { ui.tab = "list"; ui.view = "ring"; ui.set = "main"; ui.menu = false; ui.sheet = null; ui.sel = null; ui.q = q || ""; ui.f = Object.assign(qDef(), f || {}); ui.qn = 150; ui.fo = {}; render(); const m = $("main"); if (m) m.scrollTop = 0; }
 function upTxMany(L) { if (!L.length) return; const at = nowISO(), byId = new Map(txs.map((t, i) => [t.id, i])); L.forEach(t => { t.updated_at = at; const i = byId.get(t.id); if (i == null) txs.push(t); else txs[i] = t; }); pend.push({ op: "ups", t: "fin_tx", ids: L.map(t => t.id) }); saveLocal(); flush(); }
 function delTxMany(ids) { const S = new Set(ids); txs = txs.filter(t => !S.has(t.id)); ids.forEach(id => pend.push({ op: "del", t: "fin_tx", id })); PRICES.filter(r => S.has(r.tx_id)).forEach(r => delPrice(r.id)); saveLocal(); flush(); }
 async function qCopy(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
   try { const ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
+}
+function qSgApply(name) {
+  const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]); if (!S.length) return; const cat = S[0].category_id || "_", e = (PR.sg = PR.sg || {})[cat] || (PR.sg[cat] = { m: {}, at: 0 }); let n = 0;
+  S.forEach(t => { if ((t.category_id || "_") !== cat) return; const k = sgKey(t.note); if (k) { e.m[k] = name; n++; } }); e.at = Date.now(); savePR();
+  ui.sheet = null; ui.sel = null; ui.fg = "s"; render(); toast("🧠 «" + name + "»: " + qPl(n, "название", "названия", "названий"), "ok");
+}
+async function qAi(cat) {
+  if (ui.busy) return; const c = cat === "_" ? null : cat, e = PR.sg && PR.sg[cat], cn = catOf(c).name;
+  const U = new Map(); txs.filter(t => (t.category_id || "_") === cat).forEach(t => { const k = sgKey(t.note); if (!k) return; const x = U.get(k) || { k, n: 0, t: String(t.note).replace(/\s+/g, " ").trim().slice(0, 60) }; x.n++; U.set(k, x); });
+  let L = [...U.values()]; if (e) L = L.filter(x => !sgOf({ category_id: c, note: x.t })); L.sort((a, b) => b.n - a.n);
+  if (!L.length) { toast("Все названия уже разобраны"); return; }
+  const groups = e ? [...new Set(Object.values(e.m))] : [], mk2 = n => JSON.stringify({ cat: cn, groups, items: L.slice(0, n).map((x, i) => [i, x.t, x.n]) });
+  let N = Math.min(L.length, 250); while (N > 20 && mk2(N).length > 18000) N -= 20; L = L.slice(0, N);
+  if (!confirm("Отправить в Gemini " + qPl(L.length, "название", "названия", "названий") + " трат из категории «" + cn + "» для разбора по смыслу?\n\nУйдут только тексты заметок (без сумм, дат и счетов).")) return;
+  const ses = sb && (await sb.auth.getSession()).data.session; if (!ses) { toast("Нет входа или нет связи"); return; }
+  ui.busy = 1; toast("🧠 Разбираю по смыслу…", "", 60000);
+  try {
+    const r = await fetch(CFG.url + "/functions/v1/analyze", { method: "POST", headers: { Authorization: "Bearer " + ses.access_token, apikey: CFG.key, "content-type": "application/json" }, body: mk2(N) && JSON.stringify({ kind: "spend_groups", data: JSON.parse(mk2(N)) }), signal: AbortSignal.timeout(60000) });
+    const j = await r.json().catch(() => ({})); if (!r.ok || !j.text) throw new Error(String(j.error || r.status));
+    const t = String(j.text).replace(/```(?:json)?/gi, ""), a = t.indexOf("{"), b = t.lastIndexOf("}"); if (a < 0 || b < a) throw new Error("ответ не похож на JSON");
+    const P = JSON.parse(t.slice(a, b + 1)), m = {}; let ng = 0;
+    (P.groups || []).forEach(g => { const nm = String(g.n || "").trim().slice(0, 40); if (!nm || !Array.isArray(g.i)) return; ng++; g.i.forEach(i => { const x = L[+i]; if (x && !m[x.k]) m[x.k] = nm; }); });
+    const got = Object.keys(m).length; if (!got) throw new Error("пустой разбор");
+    const E = (PR.sg = PR.sg || {})[cat] || (PR.sg[cat] = { m: {}, at: 0 }); Object.assign(E.m, m); E.at = Date.now(); savePR();
+    document.querySelectorAll(".toast").forEach(x => x.remove()); ui.fg = "s"; ui.fo = {}; qRefresh(); toast("🧠 Готово: " + qPl(got, "название", "названия", "названий") + " → " + qPl(ng, "подгруппа", "подгруппы", "подгрупп") + (j.model ? " · " + j.model : ""), "ok", 3500);
+  } catch (err) { document.querySelectorAll(".toast").forEach(x => x.remove()); toast("Не вышло: " + String(err && err.message || err).slice(0, 110), "bad", 5000); }
+  ui.busy = 0;
 }
 const QA = {
   qclr() { ui.q = ""; ui.qn = 150; render(); setTimeout(() => { const q = $("q"); if (q) q.focus(); }, 30); },
@@ -1212,7 +1298,10 @@ const QA = {
   qsvgo(a) { const s = (PR.qsv || []).find(x => x.id === a.dataset.id); if (!s) return; const cur = JSON.stringify([String(ui.q || "").trim(), qClean(ui.f)]) === JSON.stringify([s.q, qClean(s.f)]); if (cur) { ui.q = ""; ui.f = qDef(); } else { ui.q = s.q; ui.f = Object.assign(qDef(), JSON.parse(JSON.stringify(s.f)), { sh: 0 }); } ui.qn = 150; ui.sel = null; render(); },
   qbar(a) { const v = a.dataset.v.split(",").map(Number); qSet({ p: "int", a: dayKey(new Date(v[0])), b: dayKey(new Date(v[1] - 864e5)), sh: 0 }); },
   qgrp(a) { ui.fg = a.dataset.v; ui.qn = 150; qRefresh(); },
-  qsort() { ui.fs = ui.fs === "a" ? "d" : "a"; ui.qn = 150; qRefresh(); },
+  qsrtset(a) { ui.fs = a.dataset.v; ui.qn = 150; ui.sheet = null; render(); },
+  qgtog(a) { ui.fo[a.dataset.k] = a.dataset.open !== "1"; const m = $("main"), y = m ? m.scrollTop : 0; qRefresh(); if (m) m.scrollTop = y; },
+  qsgset(a) { qSgApply(a.dataset.g); }, qsgnew() { const v = (($("qsgn") || {}).value || "").trim(); if (!v) { toast("Впиши название"); return; } qSgApply(v.slice(0, 40)); },
+  qai(a) { qAi(a.dataset.id); },
   qmore() { ui.qn = (ui.qn || 150) + 300; qRefresh(); },
   qselon() { ui.sel = {}; qRefresh(); },
   qselend() { ui.sel = null; qRefresh(); },
@@ -1701,7 +1790,7 @@ const PC = new Map();
 function pageHTML(d) {   // HTML страницы (с кэшем): соседние месяцы строятся заранее в простое
   const sv = ui.rg; if (d) { ui.rg = Object.assign({}, sv); rgShift(d); }
   try {
-    const key = [ui.tab, ui.view, ui.kind, ui.q, JSON.stringify(ui.rg), JSON.stringify(ui.open), ui.ng || "", ui.itmAll ? 1 : 0, ui.qd || 0, ui.itmQ || "", JSON.stringify(ui.f), ui.fg, ui.fs, ui.qn, JSON.stringify(ui.sel), txv, new Date().getDate(), JSON.stringify(PR), cats.map(c => c.id + c.name + c.icon + c.color + c.lim + (c.archived ? 1 : 0)).join(), JSON.stringify(EXT).length].join("|");
+    const key = [ui.tab, ui.view, ui.kind, ui.q, JSON.stringify(ui.rg), JSON.stringify(ui.open), ui.ng || "", ui.itmAll ? 1 : 0, ui.qd || 0, ui.itmQ || "", JSON.stringify(ui.f), ui.fg, ui.fs, ui.qn, JSON.stringify(ui.fo), JSON.stringify(ui.sel), txv, new Date().getDate(), JSON.stringify(PR), cats.map(c => c.id + c.name + c.icon + c.color + c.lim + (c.archived ? 1 : 0)).join(), JSON.stringify(EXT).length].join("|");
     let h = PC.get(key); if (h != null) return h;
     h = ui.tab === "home" ? homeHTML() : ui.tab === "list" ? listHTML() : ui.tab === "bud" ? budScreen() : statsHTML();
     PC.set(key, h); if (PC.size > 14) PC.delete(PC.keys().next().value); return h;
