@@ -291,6 +291,57 @@ table.hm td{background-color:transparent}
 .cal button,.cal i{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-style:normal;font-size:.78em;line-height:1.1;color:var(--tx);background:rgba(var(--hm),0)}
 .cal button small{font-size:.72em;color:var(--sub)}.cal .td{outline:2px solid var(--acc);outline-offset:-2px}.cal .fu{opacity:.35}
 .xrow{display:flex;gap:10px;align-items:center;width:100%;padding:9px 0;border-top:1px solid var(--ln);text-align:left}.xrow:first-of-type{border-top:0}.xrow .xm{flex:1;min-width:0}.xrow .xm div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ===== «Операции»: поиск и фильтр ===== */
+.fsv{display:flex;gap:6px;overflow-x:auto;margin:10px 0 0;scrollbar-width:none}.fsv::-webkit-scrollbar{display:none}.fsv:empty{display:none}
+.fsvb{flex:none;padding:4px 11px;border-radius:14px;background:var(--card);color:var(--tx);font-size:12.5px;border:1px solid var(--ln);white-space:nowrap}.fsvb.on{border-color:var(--acc);color:var(--acc)}
+.fqin{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:0 4px 0 12px;height:46px;border:1px solid var(--ln);margin:10px 0 0}
+.fqin:focus-within{border-color:color-mix(in srgb,var(--acc) 70%,var(--ln))}.fqi{color:var(--sub);display:flex}.fqi svg{width:20px;height:20px}
+.fqin input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);font-size:17px;padding:0}
+.fqx{width:38px;height:38px;border-radius:50%;color:var(--sub);font-size:17px;flex:none}
+.fbar{display:flex;gap:5px;margin:8px 0;align-items:center}.fbs{flex:1;min-width:0;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}.fbs::-webkit-scrollbar{display:none}
+.fch{flex:none;display:flex;align-items:center;gap:3px;padding:6px 8px;border-radius:16px;background:var(--card);color:var(--sub);font-size:12px;font-weight:600;white-space:nowrap;transition:background .2s,color .2s}
+.fch.on{background:color-mix(in srgb,var(--acc) 22%,var(--card));color:var(--tx)}.fch u{text-decoration:none;font-size:9px;opacity:.7}
+.fch.fper{padding:0}.fch.fper>button{display:flex;align-items:center;gap:3px;padding:6px 6px;font:inherit;color:inherit}.fch.fper .far{padding:6px 7px;font-size:15px;line-height:1;font-weight:700}.fch.fper .far.off{width:6px;padding:0}
+.fgear{padding:6px 9px}
+.fsum{background:var(--card);border-radius:10px;padding:11px 12px 10px;margin-bottom:6px}
+.fl1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.fl1 b{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}.fl1 b.exp{color:var(--expc)}.fl1 .fbig2{font-size:17px;margin-right:auto}.fl1 span{color:var(--sub);font-size:13px;white-space:nowrap}
+.fl2{color:var(--sub);font-size:12px;margin-top:3px;display:flex;gap:4px 10px;flex-wrap:wrap}.fl2 em{font-style:normal;color:var(--tx)}.fl2 .fbad{color:var(--expc)}.fl2 .fgood{color:var(--acc)}
+.fspk{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:56px;margin:10px 0 0}.fspk.tight{gap:2px}
+.fspk button{flex:1;min-width:0;max-width:46px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%;padding:0}
+.fspk i{display:block;width:100%;border-radius:3px 3px 0 0;background:color-mix(in srgb,var(--expc) 62%,transparent);transition:height .25s}.fspk .cur i{background:var(--expc)}.fspk button:active i{background:var(--acc)}
+.fspk small{font-size:9.5px!important;color:var(--sub);height:12px;line-height:12px;white-space:nowrap}
+.fcx{display:flex;gap:5px;margin:9px -12px 0;padding:0 12px;overflow-x:auto;scrollbar-width:none;align-items:center}.fcx::-webkit-scrollbar{display:none}.fcx button{flex:none;display:flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;border-radius:14px;background:var(--card2);font-size:12px;max-width:80%}.fcx button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fcx button b{font-weight:700}.fcx .sub{font-size:11.5px;flex:none}
+.fhint{display:block;width:100%;text-align:left;margin:0 0 6px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb,var(--acc) 14%,var(--card));font-size:12.5px;color:var(--tx)}
+.ftool{display:flex;align-items:center;gap:6px;margin:8px 0 0;min-height:30px}
+.fseg{display:flex;background:var(--card);border-radius:9px;padding:2px}.fseg button{padding:4px 10px;border-radius:7px;font-size:12px;color:var(--sub);font-weight:600;white-space:nowrap}.fseg button.on{background:var(--card2);color:var(--tx)}
+.fsr{margin-left:auto;font-size:12px;color:var(--sub);padding:4px 6px;white-space:nowrap}.fsl{font-size:12px;color:var(--acc);padding:4px 2px;font-weight:600;white-space:nowrap}.ftool .fsl:first-child{padding-left:4px}
+.fdh{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--sub);font-size:12.5px;font-weight:600;padding:12px 4px 5px}.fdh span+span{color:var(--tx);white-space:nowrap;font-variant-numeric:tabular-nums}
+.fdh i{font-style:normal;font-weight:500;background:var(--card2);border-radius:8px;padding:0 6px;font-size:11px;margin-left:4px}.fgl{display:flex;align-items:center;gap:6px;color:var(--tx)}
+.row.rq.fon{background:color-mix(in srgb,var(--acc) 16%,var(--card))}
+.fck{width:20px;height:20px;border-radius:6px;border:2px solid var(--sub);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#08130e;transition:background .15s,border-color .15s}.fck.on{background:var(--acc);border-color:var(--acc)}
+.fmore{width:100%;margin:8px 0 0}
+.fselbar{position:fixed;left:50%;transform:translateX(-50%);width:calc(min(100%,720px) - 16px);bottom:calc(10px + env(safe-area-inset-bottom));z-index:7;background:var(--card2);border-radius:14px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:2px;box-shadow:0 6px 20px rgba(0,0,0,.45);animation:fsbup .25s cubic-bezier(.2,.8,.2,1)}@keyframes fsbup{from{transform:translate(-50%,120%)}to{transform:translate(-50%,0)}}
+.fselbar b{flex:1;font-size:13.5px;line-height:1.2;min-width:0}.fselbar b small{display:block!important;color:var(--sub);font-weight:500;font-size:11.5px!important}
+.fselbar button{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10.5px;color:var(--tx);padding:4px 7px;border-radius:8px}.fselbar button i{font-style:normal;font-size:17px}.fselbar button:disabled{opacity:.35}
+.fsh{padding-top:8px}.fgrab{width:38px;height:4px;border-radius:2px;background:var(--ln);margin:0 auto 10px}
+.fsh h2{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:17px}.fsm{font-size:12.5px;color:var(--acc);font-weight:600;padding:4px 2px;white-space:nowrap}
+.fpg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.fpg button{padding:11px 4px;border-radius:10px;background:var(--card);font-size:13.5px;border:1.5px solid transparent}.fpg button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--card))}
+.fpg.k3 button{padding:16px 4px;font-size:14.5px}
+.fivl{display:flex;gap:6px;align-items:center;margin-top:10px}.fivl label{flex:1;background:var(--card);border-radius:10px;padding:6px 10px;border:1px solid var(--ln)}.fivl small,.famr small{display:block!important;color:var(--sub);font-size:11px!important}
+.fivl input{width:100%;background:none;border:0;outline:0;color:var(--tx);font-size:14px;padding:2px 0;color-scheme:light dark}
+.fnote{font-size:12px;margin-top:10px;line-height:1.4}
+.okb{display:flex;gap:8px;margin-top:14px}.okb .btn{flex:1;height:46px;padding:0}
+.fcl{max-height:46vh;overflow-y:auto;margin:0 -4px;padding:0 4px}.fcxm{display:inline-flex;margin-bottom:8px}
+.fcr{display:flex;align-items:center;gap:10px;width:100%;padding:8px 2px;border-bottom:1px solid var(--ln);font-size:14.5px;text-align:left}.fcr:last-child{border-bottom:0}.fcr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fcr .cnt{color:var(--sub);font-size:12px;text-align:right;min-width:86px}.fcr .cnt b{color:var(--tx);font-weight:600;display:block;font-size:13.5px}.fcr.z{opacity:.42}
+.flbl{color:var(--sub);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin:14px 2px 6px}
+.famr{display:flex;gap:8px}.famr label{flex:1;background:var(--card);border-radius:10px;padding:6px 10px;border:1px solid var(--ln)}.famr input{width:100%;background:none;border:0;outline:0;color:var(--tx);font-size:16px;padding:2px 0}
+.fdw{display:flex;gap:4px}.fdw button{flex:1;padding:8px 0;border-radius:9px;background:var(--card);font-size:13px;color:var(--sub);font-weight:600}.fdw button.on{background:color-mix(in srgb,var(--acc) 22%,var(--card));color:var(--tx)}
+.ftgl{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 2px 10px;font-size:14px;border-bottom:1px solid var(--ln);text-align:left}.ftgl i{width:38px;height:22px;border-radius:11px;background:var(--card2);position:relative;flex:none;transition:background .2s}.ftgl i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--sub);transition:left .2s}.ftgl i.on{background:var(--acc)}.ftgl i.on::after{left:19px;background:#fff}
+.fsyn{background:var(--card);border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.7;color:var(--sub)}.fsyn code{color:var(--tx);background:var(--card2);padding:1px 5px;border-radius:4px;font-size:12px}
+.fsvn{display:flex;gap:6px}.fsvn input{flex:1;min-width:0;background:var(--card);border-radius:10px;padding:10px;font-size:14px;border:1px solid var(--ln);color:var(--tx);outline:0}.fsvn button{padding:0 12px;border-radius:10px;background:var(--card2);font-weight:600;font-size:13px;white-space:nowrap}
+.fsvl{margin-top:6px}.fsvl div{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 4px 4px;font-size:13.5px}.fsvl button{width:34px;height:30px;color:var(--sub);border-radius:8px}
+.sub-r.fqgo{color:var(--acc);justify-content:flex-start}.sub-r.fqgo .t{color:var(--acc)}
 </style>
 </head>
 <body>
@@ -899,7 +950,7 @@ function homeHTML() {
   const pill = '<div class="brow' + (ring ? "" : " stk") + '"><button class="lb" data-a="' + (ring ? "qtpl" : "viewtog") + '">' + (ring ? UI.bolt : UI.lines) + '</button><button class="pill" data-a="viewtog" style="background:' + (bal >= 0 ? "var(--inc)" : "var(--expc)") + '">Баланс ' + fmH(bal) + '</button><button class="lb" data-a="' + (ring ? "qbud" : "kindtog") + '" style="color:' + (ring ? "var(--inc)" : K === "exp" ? "var(--expc)" : "var(--inc)") + '">' + (ring ? UI.gauge : UI.tag) + "</button></div>";
   let body;
   if (ring) body = ringHTML(items, tot, exp, inc, K) + pill;
-  else body = pill + nutNote() + ('' + srtRow("list") + (catOrder(items.map(x => ({ c: x.cat, v: x.v, n: x.n, x, b: K === "exp" && ui.rg.t === "m" && x.cat.id ? budgetOf(x.cat, mk(new Date(rgBounds(ui.rg)[0]))) : null })), mkey).map(o => { const x = o.x, id = x.cat.id || "_", op = ui.open[id], bb = o.b, bst = bb && bb.kind !== "closed" ? budState(x.v, bb, mk(new Date(rgBounds(ui.rg)[0]))) : null, cld = bb && bb.kind === "closed"; return '<button class="crow' + (cld ? " cld" : "") + (isCur ? " cur" : " cmp") + '" data-a="catopen" data-id="' + id + '"><span class="chev' + (op ? " up" : "") + '">' + UI.chev + '</span><div class="ci">' + ic(x.cat.icon, x.cat.color, 36) + (K === "exp" && fixM(mkey)[x.cat.id] ? '<span class="lkb">🔒</span>' : "") + '</div><b><span class="tn">' + esc(x.cat.name) + '</span><span class="bd">' + x.n + '</span></b><span class="ar">' + (cld ? '<span class="a ' + K + '">' + fmN(x.v) + '</span><span class="ck">✔</span>' : bb ? '<span class="fr" style="' + frStyle(x.v / (bb.v || 1)) + '">' + fmN(x.v) + " / " + fmN(bb.v) + "</span>" : '<span class="a ' + K + '">' + fmH(x.v) + "</span>") + "</span></button>" + (op ? '<div class="grpst"></div>' + arr.filter(t => t.kind === K && (t.category_id || "_") === id).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 3000).map(t => { const d = new Date(t.ts); return '<button class="sub-r" data-a="edit" data-id="' + t.id + '"><span class="sub">' + d.getDate() + " " + MONS_S[d.getMonth()] + '</span><span class="t">' + esc(t.note || "—") + '</span><span class="' + K + '">' + fm(t.amount) + "</span></button>"; }).join("") + '<div class="grpend"></div>' : ""); }).join("") || '<div class="empty">За период операций нет</div>'));
+  else body = pill + nutNote() + ('' + srtRow("list") + (catOrder(items.map(x => ({ c: x.cat, v: x.v, n: x.n, x, b: K === "exp" && ui.rg.t === "m" && x.cat.id ? budgetOf(x.cat, mk(new Date(rgBounds(ui.rg)[0]))) : null })), mkey).map(o => { const x = o.x, id = x.cat.id || "_", op = ui.open[id], bb = o.b, bst = bb && bb.kind !== "closed" ? budState(x.v, bb, mk(new Date(rgBounds(ui.rg)[0]))) : null, cld = bb && bb.kind === "closed"; return '<button class="crow' + (cld ? " cld" : "") + (isCur ? " cur" : " cmp") + '" data-a="catopen" data-id="' + id + '"><span class="chev' + (op ? " up" : "") + '">' + UI.chev + '</span><div class="ci">' + ic(x.cat.icon, x.cat.color, 36) + (K === "exp" && fixM(mkey)[x.cat.id] ? '<span class="lkb">🔒</span>' : "") + '</div><b><span class="tn">' + esc(x.cat.name) + '</span><span class="bd">' + x.n + '</span></b><span class="ar">' + (cld ? '<span class="a ' + K + '">' + fmN(x.v) + '</span><span class="ck">✔</span>' : bb ? '<span class="fr" style="' + frStyle(x.v / (bb.v || 1)) + '">' + fmN(x.v) + " / " + fmN(bb.v) + "</span>" : '<span class="a ' + K + '">' + fmH(x.v) + "</span>") + "</span></button>" + (op ? '<div class="grpst"></div>' + arr.filter(t => t.kind === K && (t.category_id || "_") === id).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 3000).map(t => { const d = new Date(t.ts); return '<button class="sub-r" data-a="edit" data-id="' + t.id + '"><span class="sub">' + d.getDate() + " " + MONS_S[d.getMonth()] + '</span><span class="t">' + esc(t.note || "—") + '</span><span class="' + K + '">' + fm(t.amount) + "</span></button>"; }).join("") + '<button class="sub-r fqgo" data-a="qcatgo" data-id="' + id + '" data-k="' + K + '"><span class="t">🔍 Открыть в поиске с фильтрами</span></button><div class="grpend"></div>' : ""); }).join("") || '<div class="empty">За период операций нет</div>'));
   return topBar(true) + body + '<div style="height:160px"></div><div class="fab"><button class="fb m" data-a="pick" data-v="exp"></button><button class="fb p" data-a="pick" data-v="inc"></button><button class="fb cam" data-a="rcpphoto" aria-label="Снять чек">📷</button></div>';
 }
 const hl = (txt, q) => { txt = String(txt || ""); if (!q) return esc(txt); const lo = txt.toLowerCase(); let o = "", p = 0, i; while ((i = lo.indexOf(q, p)) >= 0 && q) { o += esc(txt.slice(p, i)) + "<mark>" + esc(txt.slice(i, i + q.length)) + "</mark>"; p = i + q.length; } return o + esc(txt.slice(p)); };
@@ -912,19 +963,287 @@ function txRow(t) {
   const c = catOf(t.category_id), d = new Date(t.ts);
   return '<button class="row" data-a="edit" data-id="' + t.id + '"><div class="ci">' + ic(c.icon, c.color) + '</div><div class="t"><b>' + esc(c.name) + "</b>" + (t.note ? "<small>" + esc(t.note) + "</small>" : "") + '</div><div class="a ' + t.kind + '">' + (t.kind === "exp" ? "−" : "+") + fm(t.amount) + "</div></button>";
 }
+/* ============ «Операции»: гибкий поиск и фильтр ============
+   ui.f — фильтр (период свой, не зависит от главной): p — пресет ("" = авто: без запроса «этот месяц», с запросом «всё время»),
+   sh — сдвиг стрелками, cats/cx — категории (cx = «кроме»), k — exp|inc|all, min/max — сумма, dw — дни недели [вс..сб], cmp — сравнение. */
+const QP = [["m0", "Этот месяц"], ["m1", "Прошлый месяц"], ["m3", "3 месяца"], ["m6", "6 месяцев"], ["m12", "12 месяцев"], ["y0", "Этот год"], ["y1", "Прошлый год"], ["all", "Всё время"], ["int", "Свой…"]];
+const qDef = () => ({ p: "", sh: 0, cats: [], cx: false, k: "exp", min: "", max: "", dw: null, cmp: true });
+ui.f = qDef(); ui.fg = "d"; ui.fs = "d"; ui.qn = 150; ui.sel = null;
+const qPl = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + " " + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c); };
+const nzQ = x => String(x == null ? "" : x).toLowerCase().replace(/ё/g, "е");
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const qEff = f => f.p || (String(ui.q || "").trim() ? "all" : "m0");
+const qNum = v => { const x = parseFloat(String(v == null ? "" : v).replace(/\s/g, "").replace(",", ".")); return x > 0 ? x : 0; };
+function qBounds(f, k) {
+  const p = qEff(f), sh = (f.sh || 0) + (k || 0), now = new Date();
+  if (p === "all") return [0, Infinity];
+  if (p === "rg") return rgBounds(f.rg, sh);
+  if (p === "int") {
+    const A = sod(new Date(f.a + "T12:00")), Z = new Date(+sod(new Date(f.b + "T12:00")) + 864e5);
+    if (A.getDate() === 1 && Z.getDate() === 1) { const n = (Z.getFullYear() - A.getFullYear()) * 12 + Z.getMonth() - A.getMonth(); return [+new Date(A.getFullYear(), A.getMonth() + sh * n, 1), +new Date(Z.getFullYear(), Z.getMonth() + sh * n, 1)]; }   // целые месяцы листаем месяцами
+    const L = Math.round((Z - A) / 864e5); return [+new Date(A.getFullYear(), A.getMonth(), A.getDate() + sh * L), +new Date(Z.getFullYear(), Z.getMonth(), Z.getDate() + sh * L)];
+  }
+  if (p[0] === "d") { const n = +p.slice(1) || 30, e = +sod(now) + 864e5 + sh * n * 864e5; return [e - n * 864e5, e]; }
+  if (p[0] === "y") { const y = now.getFullYear() - (p === "y1" ? 1 : 0) + sh; return [+new Date(y, 0, 1), +new Date(y + 1, 0, 1)]; }
+  const n = p === "m0" || p === "m1" ? 1 : +p.slice(1) || 1, s = new Date(now.getFullYear(), now.getMonth() - (p === "m1" ? 1 : 0) - (n - 1) + sh * n, 1);
+  return [+s, +new Date(s.getFullYear(), s.getMonth() + n, 1)];
+}
+const qCanShift = f => { const p = qEff(f); return p !== "all" && !(p === "rg" && (f.rg.t === "all" || f.rg.t === "int")); };
+function qLabel(f) {
+  const p = qEff(f), B = qBounds(f), s = new Date(B[0]), e = new Date(Math.min(B[1], 8.64e15) - 1), cy = new Date().getFullYear();
+  const d = x => x.getDate() + " " + MONS_S[x.getMonth()] + (x.getFullYear() !== cy ? " " + x.getFullYear() : "");
+  if (p === "all") return "Всё время";
+  if (p === "rg") return f.rg.t === "int" ? d(s) + " – " + d(e) : rgLabel({ t: f.rg.t, a: B[0] });
+  const mr = () => MONS_S[s.getMonth()] + (s.getFullYear() !== e.getFullYear() ? " " + s.getFullYear() : "") + " – " + MONS_S[e.getMonth()] + (e.getFullYear() !== cy || s.getFullYear() !== e.getFullYear() ? " " + e.getFullYear() : "");
+  if (p === "int") return s.getDate() === 1 && new Date(B[1]).getDate() === 1 ? (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear() ? MONS[s.getMonth()] + (s.getFullYear() !== cy ? " " + s.getFullYear() : "") : mr()) : d(s) + " – " + d(e);
+  if (p[0] === "d") return !(f.sh || 0) ? "Последние " + p.slice(1) + " дн." : d(s) + " – " + d(e);
+  if (p[0] === "y") return s.getFullYear() + " год";
+  if (p === "m0" || p === "m1") return MONS[s.getMonth()] + (s.getFullYear() !== cy ? " " + s.getFullYear() : "");
+  return mr();
+}
+/* строка поиска: слова через пробел (все сразу), -слово (без него), а|б (любое), "слово" (целиком), >1000 <500 =300 100-500 (сумма) */
+function qParse(q) {
+  const T = [];
+  (nzQ(q).match(/-?"[^"]*"?|\S+/g) || []).forEach(w => {
+    let neg = false, m, f = null;
+    if (w.length > 1 && w[0] === "-" && !/^-\d/.test(w)) { neg = true; w = w.slice(1); }
+    if ((m = w.match(/^([<>]=?|=)(\d+(?:[.,]\d+)?)$/))) { const v = +m[2].replace(",", "."), o = m[1]; f = t => o[0] === ">" ? (o.length > 1 ? t.amount >= v : t.amount > v) : o[0] === "<" ? (o.length > 1 ? t.amount <= v : t.amount < v) : t.amount === v; }
+    else if ((m = w.match(/^(\d+(?:[.,]\d+)?)[-–](\d+(?:[.,]\d+)?)$/))) { const a = +m[1].replace(",", "."), b = +m[2].replace(",", "."); f = t => t.amount >= Math.min(a, b) && t.amount <= Math.max(a, b); }
+    else {
+      const alts = w.split("|").map(a => { const whole = a.indexOf('"') >= 0; a = a.replace(/"/g, "").trim(); return a ? (whole ? { re: new RegExp("(^|[^a-zа-я0-9])" + reEsc(a) + "(?=$|[^a-zа-я0-9])") } : { s: a }) : null; }).filter(Boolean);
+      if (alts.length) f = (t, h) => alts.some(x => x.re ? x.re.test(h) : h.indexOf(x.s) >= 0);
+    }
+    if (f) T.push(neg ? (t, h) => !f(t, h) : f);
+  });
+  return (t, h) => T.every(f => f(t, h));
+}
+function qTerms(q) {   // что подсвечивать в строках
+  const o = []; (nzQ(q).match(/-?"[^"]*"?|\S+/g) || []).forEach(w => { if (w[0] === "-" && w.length > 1 || /^[<>=]|^\d+([.,]\d+)?[-–]\d/.test(w)) return; w.split("|").forEach(a => { a = a.replace(/"/g, "").trim(); if (a.length >= 2 && !/^\d+$/.test(a)) o.push(a); }); });
+  return o;
+}
+function qHl(txt, terms) {
+  txt = String(txt || ""); if (!terms.length) return esc(txt);
+  const re = new RegExp(terms.map(t => reEsc(t).replace(/е/g, "[её]")).join("|"), "gi"); let o = "", p = 0, m;
+  while ((m = re.exec(txt))) { if (!m[0]) { re.lastIndex++; continue; } o += esc(txt.slice(p, m.index)) + "<mark>" + esc(m[0]) + "</mark>"; p = m.index + m[0].length; }
+  return o + esc(txt.slice(p));
+}
+let _qc = { k: "", v: null };
+function qMatch(f, o) {   // o: { k: сдвиг периода, noCat: без фильтра категорий, kind: свой тип, cut: обрезать конец периода }
+  o = o || {}; const ck = [txv, ui.q, JSON.stringify(f), JSON.stringify(o), cats.length].join("|"); if (_qc.k === ck) return _qc.v;
+  const B = qBounds(f, o.k || 0), end = o.cut ? Math.min(B[1], o.cut) : B[1], tp = qParse(ui.q), CN = {}; cats.forEach(c => { CN[c.id] = nzQ(c.name); });
+  const set = !o.noCat && f.cats && f.cats.length ? new Set(f.cats) : null, kind = o.kind || f.k, mn = qNum(f.min), mx = qNum(f.max), dw = f.dw;
+  const r = txs.filter(t => {
+    const x = +new Date(t.ts); if (x < B[0] || x >= end) return false;
+    if (kind !== "all" && t.kind !== kind) return false;
+    if (set && set.has(t.category_id || "_") === !!f.cx) return false;
+    if (mn && t.amount < mn) return false; if (mx && t.amount > mx) return false;
+    if (dw && !dw[new Date(x).getDay()]) return false;
+    return tp(t, nzQ(t.note) + "\n" + (CN[t.category_id] || "без категории") + "\n" + t.amount);
+  });
+  _qc = { k: ck, v: r }; return r;
+}
+const qMainK = f => f.k === "inc" ? "inc" : "exp";
+const qSgn = (t, v) => (t === "inc" ? "+" : "−") + v;
+function qExtraN(f) { return (qNum(f.min) || qNum(f.max) ? 1 : 0) + (f.dw && f.dw.some(x => !x) ? 1 : 0); }
+const qActive = f => !!(f.p || f.sh || f.cats.length || f.k !== "exp" || qExtraN(f));
+function qCatsLbl(f) {
+  if (!f.cats.length) return "Категории";
+  const n0 = catOf(f.cats[0] === "_" ? null : f.cats[0]).name;
+  return (f.cx ? "Кроме: " : "") + (f.cats.length === 1 ? n0 : n0 + " +" + (f.cats.length - 1));
+}
+/* ---- экран ---- */
+function qSavedHTML() {
+  const L = PR.qsv || []; if (!L.length) return "";
+  const cur = JSON.stringify([String(ui.q || "").trim(), qClean(ui.f)]);
+  return L.map(s => '<button class="fsvb' + (JSON.stringify([s.q, qClean(s.f)]) === cur ? " on" : "") + '" data-a="qsvgo" data-id="' + s.id + '">⭐ ' + esc(s.n) + "</button>").join("");
+}
+const qClean = f => { const o = Object.assign({}, f); delete o.sh; o.cats = (o.cats || []).slice().sort(); return o; };
 function listHTML() {
-  return topBar(!ui.q) + '<input class="in" id="q" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Поиск по заметке, категории, сумме" value="' + esc(ui.q) + '"><div id="qres">' + listBody() + "</div>";
+  return topBar(false) + '<div class="fsv" id="qsv">' + qSavedHTML() + '</div><div class="fqin"><span class="fqi">' + UI.search + '</span><input id="q" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Заметка, категория, сумма…" value="' + esc(ui.q) + '">' + (ui.q ? '<button class="fqx" data-a="qclr" aria-label="Очистить">✕</button>' : "") + '</div><div id="qres">' + listBody() + "</div>";
+}
+function qBarHTML(f) {
+  const sh = qCanShift(f), nx = sh && qBounds(f, 1)[0] <= Date.now(), xn = qExtraN(f);
+  return '<div class="fbar"><div class="fbs"><span class="fch fper' + (f.p || f.sh ? " on" : "") + '">' + (sh ? '<button class="far" data-a="qsh" data-v="-1" aria-label="Раньше">‹</button>' : "") + '<button data-a="qsheet" data-v="qper">' + esc(qLabel(f)) + " <u>▼</u></button>" + (nx ? '<button class="far" data-a="qsh" data-v="1" aria-label="Позже">›</button>' : sh ? '<span class="far off"></span>' : "") + "</span>" +
+    '<button class="fch' + (f.cats.length ? " on" : "") + '" data-a="qsheet" data-v="qcat">' + esc(qCatsLbl(f)) + " <u>▼</u></button>" +
+    '<button class="fch' + (f.k !== "exp" ? " on" : "") + '" data-a="qsheet" data-v="qkind">' + ({ exp: "Расходы", inc: "Доходы", all: "Расходы и доходы" }[f.k]) + " <u>▼</u></button></div>" +
+    '<button class="fch fgear' + (xn ? " on" : "") + '" data-a="qsheet" data-v="qx" aria-label="Ещё условия">⚙' + (xn ? " " + xn : "") + "</button></div>";
+}
+function qBuckets(f, arr) {   // столбики: дни / месяцы / годы
+  const K = qMainK(f), B = qBounds(f), now = Date.now(), list = arr.filter(t => f.k === "all" || t.kind === K);
+  let s = B[0], e = Math.min(B[1], Math.max(now + 1, B[0] + 1)); if (!isFinite(B[1]) || B[1] > now) e = Math.min(B[1], now + 1);
+  if (s === 0) { if (!list.length) return null; s = Math.min(...list.map(t => +new Date(t.ts))); }
+  if (e <= s) return null; const days = (e - s) / 864e5, mode = days <= 45 ? "d" : days <= 900 ? "m" : "y", out = [], idx = {};
+  const st = new Date(s); let c = mode === "d" ? sod(st) : mode === "m" ? new Date(st.getFullYear(), st.getMonth(), 1) : new Date(st.getFullYear(), 0, 1);
+  while (+c < e && out.length < 120) {
+    const n = mode === "d" ? new Date(c.getFullYear(), c.getMonth(), c.getDate() + 1) : mode === "m" ? new Date(c.getFullYear(), c.getMonth() + 1, 1) : new Date(c.getFullYear() + 1, 0, 1);
+    const key = mode === "d" ? dayKey(c) : mode === "m" ? mk(c) : String(c.getFullYear());
+    idx[key] = out.length; out.push({ a: +c, b: +n, v: 0, cur: now >= +c && now < +n, l: mode === "d" ? (c.getDate() === 1 || out.length % 7 === 0 ? String(c.getDate()) : "") : mode === "m" ? MONS_S[c.getMonth()] : String(c.getFullYear()).slice(2) });
+    c = n;
+  }
+  list.forEach(t => { const d = new Date(t.ts), key = mode === "d" ? dayKey(d) : mode === "m" ? mk(d) : String(d.getFullYear()), i = idx[key]; if (i != null) out[i].v += f.k === "all" && t.kind === "inc" ? 0 : t.amount; });
+  if (out.length < 2) return null;
+  if (mode === "m" && out.length > 12) out.forEach((x, i) => { if (i % Math.ceil(out.length / 12) && !x.cur) x.l = ""; });
+  return { mode, out };
+}
+function qSumHTML(f, arr) {
+  if (!arr.length) return "";
+  const E = arr.filter(t => t.kind === "exp"), I = arr.filter(t => t.kind === "inc"), se = sumBy(E), si = sumBy(I), K = qMainK(f), M = f.k === "inc" ? I : E, sm = f.k === "inc" ? si : se;
+  const B = qBounds(f), now = Date.now();
+  let big = f.k === "all" ? '<b class="exp">−' + fmN(se) + ' ₽</b><b class="inc fbig2">+' + fmN(si) + " ₽</b>" : '<b class="' + K + '">' + qSgn(K, fmN(sm)) + " ₽</b>";
+  const l2 = [];
+  if (M.length) { l2.push("<span>в среднем <em>" + fmN(sm / M.length) + " ₽</em></span>"); const s0 = B[0] || Math.min(...M.map(t => +new Date(t.ts))), mo = (Math.min(B[1], now) - s0) / 864e5 / 30.44; if (mo >= 1.5) l2.push("<span><em>≈" + fmN(sm / mo) + " ₽</em> в мес.</span>"); if (M.length > 1) l2.push("<span>макс <em>" + fmN(Math.max(...M.map(t => t.amount))) + " ₽</em></span>"); }
+  if (f.cmp && qCanShift(f)) {   // сравнение: если период ещё идёт — с тем же отрезком прошлого
+    const run = B[1] > now, P = qBounds(f, -1), pv = sumBy(qMatch(f, { k: -1, cut: run ? P[0] + (now - B[0]) : 0 }).filter(t => f.k === "all" ? t.kind === "exp" : true)), cv = f.k === "all" ? se : sm;
+    if (pv > 0) { const pc = Math.round((cv - pv) / pv * 100), up = pc > 0; l2.push('<span class="' + (pc === 0 ? "" : (up === (K === "exp") ? "fbad" : "fgood")) + '" title="было ' + fmN(pv) + ' ₽">' + (pc === 0 ? "как в пред. периоде" : (up ? "▲ " : "▼ ") + Math.abs(pc) + "% к пред. периоду") + (run ? " на эту дату" : "") + "</span>"); }
+    else if (cv > 0) l2.push('<span class="sub">в пред. периоде 0</span>');
+  }
+  const bk = qBuckets(f, arr), mx = bk ? Math.max(1, ...bk.out.map(x => x.v)) : 1;
+  const spk = bk ? '<div class="fspk' + (bk.out.length > 16 ? " tight" : "") + '">' + bk.out.map(x => '<button data-a="qbar" data-v="' + x.a + "," + x.b + '"' + (x.cur ? ' class="cur"' : "") + ' title="' + fmN(x.v) + ' ₽"><i style="height:' + (x.v ? Math.max(2, Math.round(x.v / mx * 40)) : 0) + 'px"></i><small>' + x.l + "</small></button>").join("") + "</div>" : "";
+  const bc = byCat(arr, K).filter(x => x.v > 0), cc = bc.length > 1 ? '<div class="fcx">' + bc.slice(0, 6).map(x => '<button data-a="qcone" data-id="' + (x.cat.id || "_") + '">' + ic(x.cat.icon, x.cat.color, 18) + "<span>" + esc(x.cat.name) + "</span><b>" + fmN(x.v) + "</b></button>").join("") + (bc.length > 6 ? '<span class="sub">ещё ' + (bc.length - 6) + "</span>" : "") + "</div>" : "";
+  return '<div class="fsum"><div class="fl1">' + big + "<span>" + qPl(arr.length, "операция", "операции", "операций") + '</span></div><div class="fl2">' + l2.join("") + "</div>" + spk + cc + "</div>";
+}
+function qRowHTML(t, terms, sel, showD, noCat) {
+  const c = catOf(t.category_id), d = new Date(t.ts), nm = t.note || "", on = sel && sel[t.id];
+  const dt = showD ? d.getDate() + " " + MONS_S[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : "") : "";
+  const main = nm ? '<b class="sn">' + qHl(nm, terms) + "</b><small>" + (noCat ? dt : qHl(c.name, terms) + (dt ? " · " + dt : "")) + "</small>" : "<b>" + qHl(c.name, terms) + "</b>" + (dt ? "<small>" + dt + "</small>" : "");
+  return '<button class="row rq' + (on ? " fon" : "") + '" data-a="' + (sel ? "qsel" : "edit") + '" data-id="' + t.id + '">' + (sel ? '<span class="fck' + (on ? " on" : "") + '">' + (on ? "✓" : "") + "</span>" : "") + '<div class="ci">' + ic(c.icon, c.color, 32) + '</div><div class="t">' + main + '</div><div class="a ' + t.kind + '">' + qSgn(t.kind, fm(t.amount)) + "</div></button>";
 }
 function listBody() {
-  let arr = ui.q ? (ui.qd > 0 ? txs.filter(t => +new Date(t.ts) >= Date.now() - ui.qd * 864e5) : txs.slice()) : rgTx();
-  let qst = null; if (ui.q) { const f = searchFn(ui.q); arr = arr.filter(f); qst = { n: arr.length, e: sumBy(arr, t => t.kind === "exp" ? t.amount : 0), i: sumBy(arr, t => t.kind === "exp" ? 0 : t.amount) }; }
-  arr.sort((a, b) => b.ts.localeCompare(a.ts)); const lim = ui.q ? 60 : 600, more = arr.length - lim; arr = arr.slice(0, lim);
-  let h = "" + (qst ? '<div class="sub" style="padding:2px 4px 6px;font-size:.85em">' + (ui.qd > 0 ? '<button class="chip on" data-a="qdclr" style="padding:2px 8px;font-size:.9em">за ' + winLbl(ui.qd) + " ✕</button> " : "") + "Найдено: " + qst.n + (qst.e ? " · расходы " + fmN(qst.e) : "") + (qst.i ? " · доходы " + fmN(qst.i) : "") + "</div>" : "") + (!ui.q ? '<div class="sub" style="padding:0 4px 6px;font-size:.78em">Можно искать несколько слов сразу, а ещё: &gt;1000, &lt;500, 100-500</div>' : ""), cur = "", buf = [];
-  const groups = []; arr.forEach(t => { const dk = dayKey(new Date(t.ts)); if (dk !== cur) { cur = dk; groups.push({ dk, items: [] }); } groups[groups.length - 1].items.push(t); });
-  groups.forEach(g => { const d = new Date(g.dk + "T12:00"), s = sumBy(g.items, t => t.kind === "exp" ? -t.amount : t.amount); h += '<div class="day"><span>' + WD[d.getDay()] + ", " + d.getDate() + " " + MONS_S[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : "") + "</span>" + (ui.q ? "" : "<span>" + fm(s) + "</span>") + "</div>" + g.items.map(t => ui.q ? txRowQ(t, ui.q.toLowerCase()) : txRow(t)).join(""); });
-  if (!groups.length) h += '<div class="empty">Операций нет</div>'; if (more > 0) h += '<div class="empty">…и ещё ' + more + " (уточни поиск)</div>";
+  const f = ui.f, arr = qMatch(f), terms = qTerms(ui.q), sel = ui.sel;
+  let h = qBarHTML(f) + qSumHTML(f, arr);
+  if (f.k !== "all") { const ok = f.k === "exp" ? "inc" : "exp", on = qMatch(f, { kind: ok }).length; if (on && (ui.q || "").trim()) h += '<button class="fhint" data-a="qkset" data-v="all">' + (arr.length ? "Ещё " : "Нашлось ") + qPl(on, "совпадение", "совпадения", "совпадений") + " в " + (ok === "inc" ? "доходах" : "расходах") + " — показать</button>"; }
+  if (!arr.length) return h + '<div class="empty">' + (txs.length ? "Ничего не нашлось. Попробуй другой период или сними фильтры" : "Операций пока нет") + "</div>" + (qActive(f) ? '<div style="text-align:center"><button class="btn g" data-a="qreset">Сбросить фильтры</button></div>' : "");
+  h += '<div class="ftool">' + (sel ? '<button class="fsl" data-a="qselall">✓ Выбрать все ' + arr.length + '</button><button class="fsr" data-a="qselend">Отмена</button>' : '<div class="fseg">' + [["d", "Дни"], ["m", "Месяцы"], ["c", "Категории"]].map(x => '<button data-a="qgrp" data-v="' + x[0] + '"' + (ui.fg === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fsr" data-a="qsort">↓ ' + (ui.fs === "a" ? "сумма" : "дата") + '</button><button class="fsl" data-a="qselon">Выбрать</button>') + "</div>";
+  const byD = (a, b) => b.ts.localeCompare(a.ts), by = ui.fs === "a" ? (a, b) => b.amount - a.amount || byD(a, b) : byD, G = [], gm = new Map(), g = ui.fg;
+  arr.slice().sort(byD).forEach(t => { const d = new Date(t.ts), k = g === "c" ? (t.category_id || "_") : g === "m" ? mk(d) : dayKey(d); let x = gm.get(k); if (!x) { x = { k, items: [], s: 0 }; gm.set(k, x); G.push(x); } x.items.push(t); x.s += t.kind === "exp" ? -t.amount : t.amount; });
+  if (g === "c") G.sort((a, b) => Math.abs(b.s) - Math.abs(a.s));
+  let n = 0; const lim = ui.qn || 150, cy = new Date().getFullYear();
+  for (const x of G) {
+    if (n >= lim) break;
+    let lb; if (g === "c") { const c = catOf(x.k === "_" ? null : x.k); lb = '<span class="fgl">' + ic(c.icon, c.color, 18) + esc(c.name) + " <i>" + x.items.length + "</i></span>"; } else if (g === "m") { lb = monLabel(x.k) + ' <i class="fgn">' + x.items.length + "</i>"; } else { const d = new Date(x.k + "T12:00"); lb = WD[d.getDay()] + ", " + d.getDate() + " " + MONS_S[d.getMonth()] + (d.getFullYear() !== cy ? " " + d.getFullYear() : ""); }
+    h += '<div class="fdh"><span>' + lb + "</span><span>" + (x.s < 0 ? "−" : "+") + fmN(Math.abs(x.s)) + " ₽</span></div>";
+    const it = x.items.slice().sort(by).slice(0, lim - n); n += it.length; h += it.map(t => qRowHTML(t, terms, sel, g !== "d", g === "c")).join("");
+  }
+  ui._qmore = arr.length > n; if (ui._qmore) h += '<button class="btn g fmore" data-a="qmore">Показать ещё (осталось ' + (arr.length - n) + ")</button>";
+  if (sel) { const S = arr.filter(t => sel[t.id]), se = sumBy(S, t => t.kind === "exp" ? t.amount : 0), si = sumBy(S, t => t.kind === "inc" ? t.amount : 0); h += '<div style="height:84px"></div><div class="fselbar"><b>Выбрано ' + S.length + "<small>" + (se ? "−" + fmN(se) + " ₽" : "") + (se && si ? " · " : "") + (si ? "+" + fmN(si) + " ₽" : "") + "</small></b>" + '<button data-a="qsheet" data-v="qmv"' + (S.length ? "" : " disabled") + "><i>🏷</i>Категория</button><button data-a=\"qxl\"" + (S.length ? "" : " disabled") + '><i>📋</i>В Excel</button><button data-a="qsheet" data-v="qdel"' + (S.length ? "" : " disabled") + "><i>🗑</i>Удалить</button></div>"; }
+  else h += '<div style="height:24px"></div>';
   return h;
 }
+function qRefresh() { _qc.k = ""; const r = $("qres"); if (r) r.innerHTML = listBody(); else render(); const s = $("qsv"); if (s) s.innerHTML = qSavedHTML(); syncHistory(); }
+/* ---- листы ---- */
+function qCount(f) { return qMatch(f).length; }
+function qSheetHTML(s) {
+  const f = s.f, wrap = (title, body, extra) => '<div class="ov" data-a="shclose"><div class="sheet fsh" data-a="nop"><div class="fgrab"></div><h2>' + title + (extra || "") + "</h2>" + body + "</div></div>";
+  if (s.type === "qper") {
+    const B = qBounds(ui.f), cur = qEff(ui.f), di = x => dayKey(new Date(x)), a = f.a || di(Math.max(B[0], txs.length ? Math.min(...txs.map(t => +new Date(t.ts))) : Date.now())), b = f.b || di(Math.min(B[1] - 1, Date.now()));
+    return wrap("Период поиска", '<div class="fpg">' + QP.map(x => '<button data-a="qpp" data-v="' + x[0] + '"' + ((s.int ? x[0] === "int" : x[0] === cur && !!ui.f.p) ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>" +
+      (s.int || cur === "int" ? '<div class="fivl"><label><small>с</small><input type="date" id="qa" value="' + a + '"></label><span class="sub">—</span><label><small>по</small><input type="date" id="qb" value="' + b + '"></label></div><div class="okb"><button class="btn" data-a="qint">Показать</button></div>' : "") +
+      '<div class="sub fnote">Свой период, не зависит от главной. Стрелки ‹ › у чипа листают его назад и вперёд.' + (ui.f.p ? "" : "<br>Сейчас стоит «авто»: без запроса — этот месяц, с запросом — всё время.") + "</div>", ui.f.p ? '<button class="fsm" data-a="qpp" data-v="">Авто</button>' : "");
+  }
+  if (s.type === "qkind") {
+    return wrap("Что искать", '<div class="fpg k3">' + [["exp", "Расходы"], ["inc", "Доходы"], ["all", "Всё вместе"]].map(x => '<button data-a="qkset" data-v="' + x[0] + '"' + (ui.f.k === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>");
+  }
+  if (s.type === "qcat") {
+    const st = s.st || (s.st = (() => { const m = {}; qMatch(Object.assign({}, ui.f, { cats: [] }), { noCat: true }).forEach(t => { const k = t.category_id || "_", x = m[k] || (m[k] = { n: 0, v: 0 }); x.n++; x.v += t.amount; }); return m; })());
+    const kinds = ui.f.k === "all" ? ["exp", "inc"] : [ui.f.k], L = cats.filter(c => kinds.includes(c.kind) && (!c.archived || st[c.id])).map(c => ({ id: c.id, c, x: st[c.id] }));
+    if (st._) L.push({ id: "_", c: catOf(null), x: st._ });
+    L.sort((a, b) => (b.x ? b.x.v : -1) - (a.x ? a.x.v : -1) || (a.c.kind === b.c.kind ? (a.c.position || 0) - (b.c.position || 0) : a.c.kind === "exp" ? -1 : 1));
+    const sel = new Set(f.cats), q = (ui.q || "").trim(), cnt = qCount(Object.assign({}, ui.f, { cats: f.cats, cx: f.cx }));
+    return wrap("Категории", '<div class="fseg fcxm"><button data-a="qcx" data-v="0"' + (f.cx ? "" : ' class="on"') + '>Только отмеченные</button><button data-a="qcx" data-v="1"' + (f.cx ? ' class="on"' : "") + ">Кроме отмеченных</button></div>" +
+      '<div class="sub fnote" style="margin:0 2px 4px">' + (q ? "Совпадения с «" + esc(q) + "»" : "Операции") + " · " + esc(qLabel(ui.f).toLowerCase()) + ":</div>" +
+      '<div class="fcl" id="qcl">' + L.map(o => { const on = sel.has(o.id); return '<button class="fcr' + (o.x ? "" : " z") + '" data-a="qct" data-id="' + o.id + '"><span class="fck' + (on ? " on" : "") + '">' + (on ? "✓" : "") + "</span>" + ic(o.c.icon, o.c.color, 26) + '<span class="nm">' + esc(o.c.name) + '</span><span class="cnt">' + (o.x ? "<b>" + fmN(o.x.v) + " ₽</b>" + o.x.n + " шт." : "нет совпадений") + "</span></button>"; }).join("") + "</div>" +
+      '<div class="okb"><button class="btn" data-a="qcapply">Показать ' + cnt + "</button></div>", '<button class="fsm" data-a="qcnone">Снять все</button>');
+  }
+  if (s.type === "qx") {
+    const dw = f.dw || [1, 1, 1, 1, 1, 1, 1], ord = [1, 2, 3, 4, 5, 6, 0], wk = [1, 2, 3, 4, 5].every(i => dw[i]) && !dw[0] && !dw[6], we = !wk && dw[0] && dw[6] && [1, 2, 3, 4, 5].every(i => !dw[i]), al = dw.every(Boolean);
+    const sv = PR.qsv || [], defN = (ui.q || "").trim() ? (ui.q.trim().charAt(0).toUpperCase() + ui.q.trim().slice(1)) : ui.f.cats.length ? qCatsLbl(ui.f) : "Мой фильтр";
+    return wrap("Ещё условия", '<div class="flbl" style="margin-top:0">Сумма, ₽</div><div class="famr"><label><small>от</small><input id="qmin" inputmode="decimal" value="' + esc(f.min) + '" placeholder="—"></label><label><small>до</small><input id="qmax" inputmode="decimal" value="' + esc(f.max) + '" placeholder="—"></label></div>' +
+      '<div class="flbl">Дни недели</div><div class="fdw">' + ord.map(i => '<button data-a="qdw" data-v="' + i + '"' + (dw[i] ? ' class="on"' : "") + ">" + WD[i] + "</button>").join("") + '</div><div class="fdw" style="margin-top:4px"><button data-a="qdwp" data-v="wk"' + (wk ? ' class="on"' : "") + '>Будни</button><button data-a="qdwp" data-v="we"' + (we ? ' class="on"' : "") + '>Выходные</button><button data-a="qdwp" data-v="all"' + (al ? ' class="on"' : "") + ">Все</button></div>" +
+      '<button class="ftgl" data-a="qcmp"><span>Сравнивать с прошлым периодом</span><i' + (f.cmp ? ' class="on"' : "") + "></i></button>" +
+      '<div class="flbl">Строка поиска понимает</div><div class="fsyn"><code>такси домой</code> оба слова<br><code>такси -аэропорт</code> без слова<br><code>такси|яндекс</code> любое из слов<br><code>"бар"</code> только слово целиком<br><code>&gt;1000</code> <code>&lt;500</code> <code>100-500</code> сумма</div>' +
+      '<div class="flbl">Сохранить как ⭐</div><div class="fsvn"><input id="qsvn" autocomplete="off" value="' + esc(s.svn != null ? s.svn : defN) + '" placeholder="Название"><button data-a="qsave">⭐ Сохранить</button></div>' +
+      (sv.length ? '<div class="fsvl">' + sv.map(x => '<div><span>⭐ ' + esc(x.n) + '</span><button data-a="qsvdel" data-id="' + x.id + '" aria-label="Удалить">✕</button></div>').join("") + "</div>" : "") +
+      '<div class="okb"><button class="btn" data-a="qxapply" id="qxb">Показать ' + qCount(Object.assign({}, ui.f, { min: f.min, max: f.max, dw: f.dw, cmp: f.cmp })) + "</button></div>", '<button class="fsm" data-a="qreset">Сбросить всё</button>');
+  }
+  if (s.type === "qmv") {
+    const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]), ne = S.filter(t => t.kind === "exp").length, ni = S.length - ne, k = ne >= ni ? "exp" : "inc";
+    return wrap("Перенести " + qPl(k === "exp" ? ne : ni, "операцию", "операции", "операций") + " в…", (ne && ni ? '<div class="sub fnote">Выбраны и расходы, и доходы: перенесу только ' + (k === "exp" ? "расходы" : "доходы") + ".</div>" : "") + '<div class="fcl">' + catsOf(k).map(c => '<button class="fcr" data-a="qmvgo" data-id="' + c.id + '" data-k="' + k + '">' + ic(c.icon, c.color, 26) + '<span class="nm">' + esc(c.name) + "</span></button>").join("") + "</div>");
+  }
+  if (s.type === "qdel") {
+    const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]);
+    return wrap("Удалить " + qPl(S.length, "операцию", "операции", "операций") + "?", '<div class="sub fnote">На сумму ' + fmN(sumBy(S)) + " ₽. Сразу после удаления можно нажать «Вернуть».</div>" + '<div class="okb"><button class="btn d" data-a="qdelgo">Удалить</button><button class="btn g" data-a="shclose">Отмена</button></div>');
+  }
+  return "";
+}
+function qReadX() { const s = ui.sheet; if (!s || s.type !== "qx") return; const a = $("qmin"), b = $("qmax"), n = $("qsvn"); if (a) s.f.min = a.value.trim(); if (b) s.f.max = b.value.trim(); if (n) s.svn = n.value; }
+function qXBtn() { const s = ui.sheet, b = $("qxb"); if (b && s) b.textContent = "Показать " + qCount(Object.assign({}, ui.f, { min: s.f.min, max: s.f.max, dw: s.f.dw })); }
+function qSet(ch) { Object.assign(ui.f, ch); ui.qn = 150; ui.sheet = null; render(); }
+function qGo(q, f) { ui.tab = "list"; ui.view = "ring"; ui.set = "main"; ui.menu = false; ui.sheet = null; ui.sel = null; ui.q = q || ""; ui.f = Object.assign(qDef(), f || {}); ui.qn = 150; render(); const m = $("main"); if (m) m.scrollTop = 0; }
+function upTxMany(L) { if (!L.length) return; const at = nowISO(), byId = new Map(txs.map((t, i) => [t.id, i])); L.forEach(t => { t.updated_at = at; const i = byId.get(t.id); if (i == null) txs.push(t); else txs[i] = t; }); pend.push({ op: "ups", t: "fin_tx", ids: L.map(t => t.id) }); saveLocal(); flush(); }
+function delTxMany(ids) { const S = new Set(ids); txs = txs.filter(t => !S.has(t.id)); ids.forEach(id => pend.push({ op: "del", t: "fin_tx", id })); PRICES.filter(r => S.has(r.tx_id)).forEach(r => delPrice(r.id)); saveLocal(); flush(); }
+async function qCopy(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try { const ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
+}
+const QA = {
+  qclr() { ui.q = ""; ui.qn = 150; render(); setTimeout(() => { const q = $("q"); if (q) q.focus(); }, 30); },
+  qsheet(a) { const t = a.dataset.v; if (a.disabled) return; qReadX(); ui.sheet = { type: t, f: JSON.parse(JSON.stringify(ui.f)), int: t === "qper" && qEff(ui.f) === "int" }; render(); },
+  qsh(a) { if (a.classList.contains("off")) return; const d = +a.dataset.v; ui.f.sh = (ui.f.sh || 0) + d; if (!ui.f.p) ui.f.p = qEff(ui.f); ui.qn = 150; render(); },
+  qpp(a) { const v = a.dataset.v; if (v === "int") { ui.sheet.int = true; render(); return; } qSet({ p: v, sh: 0 }); },
+  qint() { const a = ($("qa") || {}).value, b = ($("qb") || {}).value; if (!a || !b) { toast("Выбери обе даты"); return; } qSet({ p: "int", a: a < b ? a : b, b: a < b ? b : a, sh: 0 }); },
+  qkset(a) { const k = a.dataset.v; qSet(ui.f.k === "all" || k === "all" || ui.f.cats.every(id => id === "_" || (cats.find(c => c.id === id) || {}).kind === k) ? { k } : { k, cats: [], cx: false }); },
+  qct(a) { const s = ui.sheet, id = a.dataset.id, i = s.f.cats.indexOf(id); if (i >= 0) s.f.cats.splice(i, 1); else s.f.cats.push(id); const y = ($("qcl") || {}).scrollTop || 0; render(); const l = $("qcl"); if (l) l.scrollTop = y; },
+  qcx(a) { ui.sheet.f.cx = a.dataset.v === "1"; const y = ($("qcl") || {}).scrollTop || 0; render(); const l = $("qcl"); if (l) l.scrollTop = y; },
+  qcnone() { ui.sheet.f.cats = []; ui.sheet.f.cx = false; render(); },
+  qcapply() { const s = ui.sheet; qSet({ cats: s.f.cats.slice(), cx: s.f.cats.length ? s.f.cx : false }); },
+  qcone(a) { qSet({ cats: [a.dataset.id], cx: false }); },
+  qdw(a) { qReadX(); const s = ui.sheet, d = (s.f.dw || [1, 1, 1, 1, 1, 1, 1]).slice(), i = +a.dataset.v; d[i] = d[i] ? 0 : 1; if (!d.some(Boolean)) d[i] = 1; s.f.dw = d.every(Boolean) ? null : d; render(); },
+  qdwp(a) { qReadX(); const v = a.dataset.v; ui.sheet.f.dw = v === "wk" ? [0, 1, 1, 1, 1, 1, 0] : v === "we" ? [1, 0, 0, 0, 0, 0, 1] : null; render(); },
+  qcmp() { qReadX(); ui.sheet.f.cmp = !ui.sheet.f.cmp; render(); },
+  qxapply() { qReadX(); const s = ui.sheet; qSet({ min: s.f.min, max: s.f.max, dw: s.f.dw, cmp: s.f.cmp }); },
+  qreset() { ui.f = qDef(); ui.qn = 150; ui.sheet = null; render(); },
+  qsave() {
+    qReadX(); const s = ui.sheet, n = String(s.svn || "").trim(); if (!n) { toast("Впиши название"); return; }
+    const f = qClean(Object.assign({}, ui.f, { min: s.f.min, max: s.f.max, dw: s.f.dw, cmp: s.f.cmp })); f.sh = 0;
+    const L = (PR.qsv || []).filter(x => x.n !== n); L.unshift({ id: uid(), n, q: String(ui.q || "").trim(), f }); PR.qsv = L.slice(0, 20); savePR();
+    Object.assign(ui.f, { min: s.f.min, max: s.f.max, dw: s.f.dw, cmp: s.f.cmp }); ui.sheet = null; render(); toast("⭐ Сохранено: " + n, "ok");
+  },
+  qsvdel(a) { qReadX(); PR.qsv = (PR.qsv || []).filter(x => x.id !== a.dataset.id); savePR(); render(); },
+  qsvgo(a) { const s = (PR.qsv || []).find(x => x.id === a.dataset.id); if (!s) return; const cur = JSON.stringify([String(ui.q || "").trim(), qClean(ui.f)]) === JSON.stringify([s.q, qClean(s.f)]); if (cur) { ui.q = ""; ui.f = qDef(); } else { ui.q = s.q; ui.f = Object.assign(qDef(), JSON.parse(JSON.stringify(s.f)), { sh: 0 }); } ui.qn = 150; ui.sel = null; render(); },
+  qbar(a) { const v = a.dataset.v.split(",").map(Number); qSet({ p: "int", a: dayKey(new Date(v[0])), b: dayKey(new Date(v[1] - 864e5)), sh: 0 }); },
+  qgrp(a) { ui.fg = a.dataset.v; ui.qn = 150; qRefresh(); },
+  qsort() { ui.fs = ui.fs === "a" ? "d" : "a"; ui.qn = 150; qRefresh(); },
+  qmore() { ui.qn = (ui.qn || 150) + 300; qRefresh(); },
+  qselon() { ui.sel = {}; qRefresh(); },
+  qselend() { ui.sel = null; qRefresh(); },
+  qsel(a) { const id = a.dataset.id; if (!ui.sel) return; if (ui.sel[id]) delete ui.sel[id]; else ui.sel[id] = 1; const m = $("main"), y = m ? m.scrollTop : 0; qRefresh(); if (m) m.scrollTop = y; },
+  qselall() { const L = qMatch(ui.f), all = L.every(t => ui.sel[t.id]); ui.sel = {}; if (!all) L.forEach(t => { ui.sel[t.id] = 1; }); qRefresh(); },
+  qmvgo(a) {
+    const id = a.dataset.id, k = a.dataset.k, S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id] && t.kind === k && t.category_id !== id); if (!S.length) { ui.sheet = null; render(); toast("Они уже в этой категории"); return; }
+    const old = S.map(t => Object.assign({}, t)); upTxMany(S.map(t => Object.assign({}, t, { category_id: id }))); ui.sheet = null; ui.sel = null; render();
+    toastU("Перенесено " + qPl(S.length, "операция", "операции", "операций") + " → " + catOf(id).name, () => { upTxMany(old.map(t => Object.assign({}, t))); render(); });
+  },
+  qdelgo() {
+    const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]); if (!S.length) return; const keep = S.map(t => Object.assign({}, t)), pr = PRICES.filter(r => S.some(t => t.id === r.tx_id)).map(r => Object.assign({}, r));
+    delTxMany(S.map(t => t.id)); ui.sheet = null; ui.sel = null; render();
+    toastU("Удалено " + qPl(S.length, "операция", "операции", "операций") + " · " + fmN(sumBy(keep)) + " ₽", () => { upTxMany(keep); pr.forEach(r => upPrice(r)); render(); });
+  },
+  async qxl() {
+    const S = qMatch(ui.f).filter(t => ui.sel && ui.sel[t.id]).sort((a, b) => a.ts.localeCompare(b.ts)); if (!S.length) return;
+    const cl = s => String(s || "").replace(/[\t\r\n]+/g, " "), num = v => String(Math.round(v * 100) / 100).replace(".", ",");
+    const tsv = ["Дата\tКатегория\tЗаметка\tСумма"].concat(S.map(t => { const d = new Date(t.ts); return pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear() + "\t" + cl(catOf(t.category_id).name) + "\t" + cl(t.note) + "\t" + (t.kind === "exp" ? "-" : "") + num(t.amount); })).join("\n");
+    toast(await qCopy(tsv) ? "📋 Скопировано " + qPl(S.length, "строка", "строки", "строк") + " — вставь в Excel" : "Не удалось скопировать", "ok", 2600);
+  },
+  qsimilar() {
+    const s = ui.sheet, t = s && txs.find(x => x.id === s.id); if (!t) return;
+    const w = (String(t.note || "").replace(PFX, "").match(/[A-Za-zА-Яа-яЁё]{3,}/) || [])[0] || "";
+    qGo(w ? w.toLowerCase() : "", w ? { k: t.kind } : { k: t.kind, cats: [t.category_id || "_"], p: "all" });
+  },
+  qcatgo(a) { qGo("", { k: a.dataset.k, cats: [a.dataset.id], p: "rg", rg: Object.assign({}, ui.rg) }); }
+};
+document.addEventListener("scroll", e => { const m = e.target; if (!m || m.id !== "main" || ui.tab !== "list" || !ui._qmore || ui._qmLock) return; if (m.scrollTop + m.clientHeight > m.scrollHeight - 600) { ui._qmLock = 1; ui.qn = (ui.qn || 150) + 300; const y = m.scrollTop; qRefresh(); m.scrollTop = y; setTimeout(() => { ui._qmLock = 0; }, 250); } }, true);
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "q") e.target.blur(); });
+document.addEventListener("input", e => { if (ui.sheet && ui.sheet.type === "qx" && (e.target.id === "qmin" || e.target.id === "qmax")) { qReadX(); qXBtn(); } });
 const PSEL = [["m3", "3 мес."], ["m6", "6 мес."], ["m12", "12 мес."], ["y0", "Этот год"], ["y1", "Прошлый год"]];
 function pMonths(k, am) {
   if (k === "y0" || k === "y1") { const y = +am.slice(0, 4) - (k === "y1" ? 1 : 0), o = []; for (let i = 1; i <= 12; i++) o.push(y + "-" + String(i).padStart(2, "0")); return o; }
@@ -1256,10 +1575,11 @@ function rcpcList(q) {
 }
 function sheetHTML() {
   const s = ui.sheet; if (!s) return "";
+  if (/^q[a-z]+$/.test(s.type || "")) return qSheetHTML(s);
   if (s.type === "tx") {
     const an = s.anim; if (an && !s._at) s._at = setTimeout(() => { s.anim = false; }, 1800);
     const c = s.cat ? catOf(s.cat) : null, d = new Date((s.date || dayKey(new Date())) + "T12:00"), dl = d.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" }), title = s.id ? "Правка" : s.kind === "exp" ? "Новый расход" : "Новый доход";
-    const head = '<div class="hdr"><button class="hb" data-a="txback">' + UI.back + '</button><div class="ttl"><div class="sa" style="color:var(--tx);font-size:1.35em;margin:0">' + title + "</div></div>" + (s.id ? '<button class="hb" data-a="txdel" style="color:var(--expc)">' + UI.trash + "</button>" : s.kind === "exp" ? '<button class="hb" data-a="rcptxt" title="Чек из письма" style="font-size:22px">✉️</button>' : "") + "</div>";
+    const head = '<div class="hdr"><button class="hb" data-a="txback">' + UI.back + '</button><div class="ttl"><div class="sa" style="color:var(--tx);font-size:1.35em;margin:0">' + title + "</div></div>" + (s.id ? '<button class="hb" data-a="qsimilar" title="Найти все такие">' + UI.search + '</button><button class="hb" data-a="txdel" style="color:var(--expc)">' + UI.trash + "</button>" : s.kind === "exp" ? '<button class="hb" data-a="rcptxt" title="Чек из письма" style="font-size:22px">✉️</button>' : "") + "</div>";
     const date = '<label class="dt">' + UI.cal + "<span>" + esc(dl.charAt(0).toUpperCase() + dl.slice(1)) + '</span><input type="date" id="s-date" value="' + esc(s.date) + '" onchange="dateChange(this.value)">' + nmChip(s) + "</label>";
     const amt = '<div class="amtbox"><div class="cur">' + UI.cash + "<small>RUB</small></div><div class=\"amt\">" + esc(s.expr || "0") + '</div><button class="bs" data-a="key" data-v="⌫">' + UI.bks + "</button></div>";
     if (s.step === "cat") {
@@ -1381,7 +1701,7 @@ const PC = new Map();
 function pageHTML(d) {   // HTML страницы (с кэшем): соседние месяцы строятся заранее в простое
   const sv = ui.rg; if (d) { ui.rg = Object.assign({}, sv); rgShift(d); }
   try {
-    const key = [ui.tab, ui.view, ui.kind, ui.q, JSON.stringify(ui.rg), JSON.stringify(ui.open), ui.ng || "", ui.itmAll ? 1 : 0, ui.qd || 0, ui.itmQ || "", txv, new Date().getDate(), JSON.stringify(PR), cats.map(c => c.id + c.name + c.icon + c.color + c.lim + (c.archived ? 1 : 0)).join(), JSON.stringify(EXT).length].join("|");
+    const key = [ui.tab, ui.view, ui.kind, ui.q, JSON.stringify(ui.rg), JSON.stringify(ui.open), ui.ng || "", ui.itmAll ? 1 : 0, ui.qd || 0, ui.itmQ || "", JSON.stringify(ui.f), ui.fg, ui.fs, ui.qn, JSON.stringify(ui.sel), txv, new Date().getDate(), JSON.stringify(PR), cats.map(c => c.id + c.name + c.icon + c.color + c.lim + (c.archived ? 1 : 0)).join(), JSON.stringify(EXT).length].join("|");
     let h = PC.get(key); if (h != null) return h;
     h = ui.tab === "home" ? homeHTML() : ui.tab === "list" ? listHTML() : ui.tab === "bud" ? budScreen() : statsHTML();
     PC.set(key, h); if (PC.size > 14) PC.delete(PC.keys().next().value); return h;
@@ -1390,7 +1710,7 @@ function pageHTML(d) {   // HTML страницы (с кэшем): соседн�
 let _pf = 0;
 let _lastTap = 0; ["touchstart", "pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { _lastTap = Date.now(); }, { passive: true, capture: true }));
 function prefetch() {
-  if (_pf || !user || !["home", "list", "stats"].includes(ui.tab) || ui.rg.t === "all" || ui.rg.t === "int") return;
+  if (_pf || !user || !["home", "stats"].includes(ui.tab) || ui.rg.t === "all" || ui.rg.t === "int") return;
   const ric = window.requestIdleCallback || (f => setTimeout(f, 120)), calm = (f, to) => { const go = () => { if (Date.now() - _lastTap < 1500) setTimeout(go, 700); else ric(f, { timeout: to }); }; setTimeout(go, 400); };
   _pf = 1; calm(() => { try { pageHTML(-1); } catch (e) {} calm(() => { try { if (rgBounds(ui.rg, 1)[0] <= Date.now()) pageHTML(1); } catch (e) {} _pf = 0; }, 3000); }, 3000);
 }
@@ -1422,7 +1742,7 @@ function slide(dir) { if (sliding) return; if (dir > 0 && rgBounds(ui.rg, 1)[0] 
 
 /* ============ кнопка «Назад» ============ */
 let hDepth = 0, hSkip = 0, guarded = false, lastBack = 0;
-const layerCount = () => !user ? 0 : (ui.menu ? 1 : 0) + (ui.sheet ? 1 + (ui.sheet.step === "cat" ? 1 : 0) : 0) + (ui.tab === "more" && ui.set !== "main" ? 1 : 0) + (ui.tab === "more" && ui.set === "prices" && ui.pk ? 1 : 0) + (ui.tab !== "home" || ui.view === "list" ? 1 : 0);
+const layerCount = () => !user ? 0 : (ui.menu ? 1 : 0) + (ui.sheet ? 1 + (ui.sheet.step === "cat" ? 1 : 0) : 0) + (ui.tab === "more" && ui.set !== "main" ? 1 : 0) + (ui.tab === "more" && ui.set === "prices" && ui.pk ? 1 : 0) + (ui.tab !== "home" || ui.view === "list" ? 1 : 0) + (ui.tab === "list" && ui.sel ? 1 : 0);
 function ensureGuard() {
   try { if (guarded || (navigator.userActivation && !navigator.userActivation.hasBeenActive)) return; history.replaceState({ base: 1 }, ""); history.pushState({ guard: 1 }, ""); guarded = true; } catch (e) {}
 }
@@ -1440,9 +1760,10 @@ function onBack() {
     hDepth--;
     if (ui.menu) ui.menu = false;
     else if (ui.sheet) { if (ui.sheet.step === "cat") ui.sheet.step = "kb"; else ui.sheet = null; }
+    else if (ui.tab === "list" && ui.sel) ui.sel = null;
     else if (ui.tab === "more" && ui.set === "prices" && ui.pk) ui.pk = null;
     else if (ui.tab === "more" && (ui.set === "cats" || ui.set === "prices")) ui.set = "main";
-    else if (ui.tab !== "home") { ui.tab = "home"; ui.q = ""; ui.set = "main"; }
+    else if (ui.tab !== "home") { ui.tab = "home"; ui.q = ""; ui.set = "main"; ui.f = qDef(); ui.sel = null; }
     else if (ui.view === "list") ui.view = "ring";
     render(); return;
   }
@@ -1547,7 +1868,7 @@ let IMP = null;
 /* ============ события ============ */
 const A = {
   none() {}, nop() {},
-  tab(a) { ui.tab = a.dataset.v; ui.q = ""; ui.qd = 0; ui.set = "main"; ui.menu = false; render(); },
+  tab(a) { ui.tab = a.dataset.v; ui.q = ""; ui.qd = 0; ui.f = qDef(); ui.sel = null; ui.qn = 150; ui.set = "main"; ui.menu = false; render(); },
   menu() { ui.menu = !ui.menu; render(); }, menuclose() { ui.menu = false; render(); },
   rgmode(a) { ui.sheet.mode = ui.sheet.mode === a.dataset.v ? "" : a.dataset.v; render(); },
   setday() { const v = $("rg-d").value; if (!v) return; ui.rg = { t: "d", a: +new Date(v + "T12:00") }; ui.sheet = null; render(); },
@@ -1558,7 +1879,7 @@ const A = {
   kindtog() { ui.kind = ui.kind === "exp" ? "inc" : "exp"; render(); },
   viewtog() { ui.view = ui.view === "list" ? "ring" : "list"; render(); },
   catopen(a) { const id = a.dataset.id; ui.open[id] = !ui.open[id]; render(); },
-  search() { ui.qd = 0; ui.tab = "list"; ui.q = " "; ui.q = ""; render(); setTimeout(() => { const q = $("q"); if (q) q.focus(); }, 50); },
+  search() { ui.qd = 0; ui.f = qDef(); ui.sel = null; ui.tab = "list"; ui.q = " "; ui.q = ""; render(); setTimeout(() => { const q = $("q"); if (q) q.focus(); }, 50); },
   pick(a) { openTx({ kind: a.dataset.v, cat: null }); },
   txback() { const s = ui.sheet; if (s && s.step === "cat") { s.step = "kb"; render(); } else { ui.sheet = null; render(); } },
   crare() { ui.sheet.rare = !ui.sheet.rare; const g = $("cg"); if (g) g.innerHTML = cgridInner(ui.sheet); },
@@ -1637,7 +1958,7 @@ const A = {
   setext() { ui.set = "ext"; render(); },
   nutg(a) { ui.ng = ui.ng === a.dataset.v ? null : a.dataset.v; render(); },
   itmset(a) { PR.itmN = +a.dataset.v; savePR(); render(); }, itmmode(a) { PR.itmM = a.dataset.v; savePR(); render(); }, itmsrt(a) { PR.itmS = a.dataset.v; savePR(); render(); }, itmall() { ui.itmAll = !ui.itmAll; render(); },
-  itmgo(a) { ui.tab = "list"; ui.q = a.dataset.q || ""; ui.qd = itmN(); ui.set = "main"; ui.menu = false; render(); },
+  itmgo(a) { ui.tab = "list"; ui.q = a.dataset.q || ""; ui.qd = 0; ui.sel = null; ui.f = Object.assign(qDef(), { p: itmN() ? "d" + itmN() : "all" }); ui.set = "main"; ui.menu = false; render(); },
   qdclr() { ui.qd = 0; const r = $("qres"); if (r) r.innerHTML = listBody(); render(); },
   renopen() { ui.sheet = { type: "ren", q: "", sel: {}, name: "" }; render(); },
   rntog(a) { const s = ui.sheet, k = a.dataset.k; if (s.sel[k]) delete s.sel[k]; else { s.sel[k] = 1; const nn = $("rn-n"); if (nn && !nn.value) { const it = allItems().filter(x => x.k === k).pop(); if (it) { nn.value = it.name; s.name = it.name; } } } renRefresh(); },
@@ -1658,7 +1979,7 @@ const A = {
   popen(a) { ui.pk = a.dataset.k; render(); }, pclose() { ui.pk = null; render(); },
   pdel(a) { if (confirm("Удалить эту запись цены? (сама трата останется)")) { delPrice(a.dataset.id); render(); } },
   tplgo(a) { const t = EXT.tpl.find(x => x.id === a.dataset.id); if (!t) return; const now = new Date(); upTx({ id: uid(), ts: now.toISOString(), amount: t.amt, kind: t.kind, category_id: t.cat, note: t.note || "", account: "Основной" }); const bm = t.kind === "exp" ? budgetMsg(t.cat, now.toISOString()) : null; ui.sheet = null; render(); toast("Записано: " + fm(t.amt) + (bm ? "\n" + bm.t : ""), bm ? bm.cls : "", bm ? 3600 : 1400); },
-  hmday(a) { ui.rg = { t: "d", a: +new Date(a.dataset.v + "T12:00") }; ui.tab = "list"; render(); },
+  hmday(a) { qGo("", { p: "rg", rg: { t: "d", a: +new Date(a.dataset.v + "T12:00") } }); },
   xnew(a) { const kind = "exp"; ui.sheet = { type: "ext", k: a.dataset.k, id: null, kind, cat: (catsOf(kind)[0] || {}).id, amt: "", note: "", day: a.dataset.k === "rec" ? "1" : "", ask: false }; render(); },
   xedit(a) { const r = EXT[a.dataset.k].find(x => x.id === a.dataset.id); if (!r) return; ui.sheet = { type: "ext", k: a.dataset.k, id: r.id, kind: r.kind, cat: r.cat, amt: r.amt, note: r.note || "", day: r.day || "", ask: !!r.ask }; render(); },
   xkind(a) { const s = ui.sheet; xread(); s.kind = a.dataset.v; s.cat = (catsOf(s.kind)[0] || {}).id; render(); },
@@ -1689,10 +2010,11 @@ const A = {
   async login() { const e = $("l-e").value.trim(), p = $("l-p").value; const r = await sb.auth.signInWithPassword({ email: e, password: p }); if (r.error) { $("l-m").textContent = r.error.message; return; } user = r.data.user; render(); pull(true); },
   async logout() { if (!confirm("Выйти? (в «Моих делах» тоже)")) return; try { await sb.auth.signOut(); } catch (e) {} user = null; render(); },
 };
+Object.assign(A, QA);
 /* свайп влево/вправо — смена периода (как в Monefy) */
 (function () {
   let sx = 0, sy = 0, st = 0, ok = false, drag = false, dxl = 0, raf = 0;
-  const can = () => user && !ui.sheet && !ui.menu && ["home", "list", "stats"].includes(ui.tab) && ui.rg.t !== "all" && ui.rg.t !== "int" && !sliding;
+  const can = () => user && !ui.sheet && !ui.menu && ["home", "stats"].includes(ui.tab) && ui.rg.t !== "all" && ui.rg.t !== "int" && !sliding;
   document.addEventListener("touchstart", e => { touching = 1; const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); drag = false; dxl = 0; ok = e.touches.length === 1 && !e.target.closest("input,textarea,.hm,.hmw,.menu,.sheet,.full,.mov,.tpls"); }, { passive: true });
   document.addEventListener("touchmove", e => {
     if (!ok || !can() && !drag) return; const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
@@ -1726,7 +2048,7 @@ document.addEventListener("selectstart", e => { const n = e.target && (e.target.
 document.addEventListener("contextmenu", e => { if (e.target.closest && e.target.closest("[data-a=edit]")) e.preventDefault(); });
 document.addEventListener("click", e => { if (Date.now() - _lpAt < 700) { e.preventDefault(); return; } const a = e.target.closest("[data-a]"); if (!a) return; const f = A[a.dataset.a]; if (f) f(a, e); });
 document.addEventListener("change", e => { const sel = e.target.dataset && e.target.dataset.sel; if (!sel) return; const v = e.target.value; if (sel === "itmset") PR.itmN = +v; else if (sel === "itmmode") PR.itmM = v; else if (sel === "itmsrt") PR.itmS = v; else return; savePR(); render(); });
-document.addEventListener("input", e => { if (e.target.id === "s-q" || e.target.id === "s-p") { unitUpd(); return; } if (e.target.id === "im-q") { ui.itmQ = e.target.value; const l = $("im-l"); if (l) l.innerHTML = itmList(itmN(), PR.itmM || "w", PR.itmS || "s", nzI(ui.itmQ)); return; } if (e.target.id === "s-note" && ui.sheet && ui.sheet.type === "tx") { const b = $("s-sug"); if (b) b.innerHTML = sugHTML(e.target.value); } if (e.target.id === "rc-q" && ui.sheet && ui.sheet.type === "rcpc") { ui.sheet.q = e.target.value; const l = $("rc-l"); if (l) l.innerHTML = rcpcList(e.target.value); return; } if (/^r-[naq]-\d+$/.test(e.target.id || "") && ui.sheet && ui.sheet.type === "rcp") { rread(); const el = $("rsum"); if (el) el.innerHTML = rsumText(ui.sheet); ui.sheet.items.forEach((x, i) => { const u = $("r-u-" + i); if (u) u.innerHTML = rUnit(x); }); return; } if (e.target.id === "pq") { ui.pq = e.target.value; const l = $("pl"); if (l) l.innerHTML = priceListInner(PRC.groups(PRICES), ui.pq.toLowerCase().trim()); return; } if (e.target.id === "cs" && ui.sheet) { ui.sheet.cq = e.target.value; const g = $("cg"); if (g) g.innerHTML = cgridInner(ui.sheet); return; } if (e.target.id === "q") { const was = !!ui.q; ui.q = e.target.value; const r = $("qres"); if (r && was === !!ui.q) { clearTimeout(window._qf); window._qf = setTimeout(() => { const r2 = $("qres"); if (r2) r2.innerHTML = listBody(); }, 140); return; } const pos = e.target.selectionStart; render(); const q = $("q"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; }
+document.addEventListener("input", e => { if (e.target.id === "s-q" || e.target.id === "s-p") { unitUpd(); return; } if (e.target.id === "im-q") { ui.itmQ = e.target.value; const l = $("im-l"); if (l) l.innerHTML = itmList(itmN(), PR.itmM || "w", PR.itmS || "s", nzI(ui.itmQ)); return; } if (e.target.id === "s-note" && ui.sheet && ui.sheet.type === "tx") { const b = $("s-sug"); if (b) b.innerHTML = sugHTML(e.target.value); } if (e.target.id === "rc-q" && ui.sheet && ui.sheet.type === "rcpc") { ui.sheet.q = e.target.value; const l = $("rc-l"); if (l) l.innerHTML = rcpcList(e.target.value); return; } if (/^r-[naq]-\d+$/.test(e.target.id || "") && ui.sheet && ui.sheet.type === "rcp") { rread(); const el = $("rsum"); if (el) el.innerHTML = rsumText(ui.sheet); ui.sheet.items.forEach((x, i) => { const u = $("r-u-" + i); if (u) u.innerHTML = rUnit(x); }); return; } if (e.target.id === "pq") { ui.pq = e.target.value; const l = $("pl"); if (l) l.innerHTML = priceListInner(PRC.groups(PRICES), ui.pq.toLowerCase().trim()); return; } if (e.target.id === "cs" && ui.sheet) { ui.sheet.cq = e.target.value; const g = $("cg"); if (g) g.innerHTML = cgridInner(ui.sheet); return; } if (e.target.id === "q") { const was = !!ui.q; ui.q = e.target.value; ui.qn = 150; const r = $("qres"); if (r && was === !!ui.q) { clearTimeout(window._qf); window._qf = setTimeout(() => { if ($("qres")) qRefresh(); }, 160); return; } const pos = e.target.selectionStart; render(); const q = $("q"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; }
   if (e.target.id === "rn-q" && ui.sheet && ui.sheet.type === "ren") { ui.sheet.q = e.target.value; renRefresh(); return; } if (e.target.id === "rn-n" && ui.sheet && ui.sheet.type === "ren") { ui.sheet.name = e.target.value; return; } });
 document.addEventListener("change", async e => {
   if ((e.target.id === "r-merge" || e.target.id === "r-date" || e.target.id === "r-all" || /^r-c-\d+$/.test(e.target.id || "")) && ui.sheet && ui.sheet.type === "rcp") {
