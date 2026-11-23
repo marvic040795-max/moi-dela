@@ -413,7 +413,7 @@ window.NOTES_INIT = function (X) {
 
   const closeMenu = () => { NT.menu = false; };
   const A = {
-    ntadd() { const el = $("nt-tx"), t = (el ? el.value : NT.tx).trim(); if (!t) { toast("Пусто — напиши хоть слово"); return; } boot(); const now = nowISO(), own = tagsOf(t), nn = { id: uid(), text: t, tags: own.length ? own : localTags(t), task_id: null, pinned: false, created_at: now, updated_at: now }; put(nn, "u"); if (!own.length && aiOn()) autoTag(nn); NT.tx = ""; NT.fresh = nn.id; NT.q = ""; NT.tag = ""; NT.focus = null; NT.cl = null; render(); setTimeout(() => { const x = $("nt-tx"); if (x) x.focus(); }, 0); },
+    ntadd() { const el = $("nt-tx"), t = (el ? el.value : NT.tx).trim(); if (!t) { toast("Пусто — напиши хоть слово"); return; } boot(); const now = nowISO(), own = tagsOf(t), nn = { id: uid(), text: t, tags: own.length ? own : localTags(t), task_id: null, pinned: false, created_at: now, updated_at: now }; put(nn, "u"); if (!own.length && aiOn()) autoTag(nn); NT.tx = ""; kp = null; if (el) el.value = ""; NT.fresh = nn.id; NT.q = ""; NT.tag = ""; NT.focus = null; NT.cl = null; render(); setTimeout(() => { const x = $("nt-tx"); if (x) x.focus(); }, 0); },
     ntmic() { micToggle("nt-tx"); },
     ntins(a) { const el = $("nt-tx"); if (!el) return; const tag = "#" + a.dataset.t + " ", p = el.selectionStart == null ? el.value.length : el.selectionStart, b = el.value.slice(0, p), pre = b && !/\s$/.test(b) ? " " : ""; el.value = b + pre + tag + el.value.slice(el.selectionEnd == null ? p : el.selectionEnd); NT.tx = el.value; const q = (b + pre + tag).length; el.focus(); el.setSelectionRange(q, q); autosize(el); },
     nttag(a) { NT.tag = a.dataset.t || ""; NT.mode = "feed"; NT.focus = null; NT.cl = null; closeMenu(); render(); },
