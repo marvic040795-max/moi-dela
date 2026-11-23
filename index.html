@@ -66,7 +66,7 @@ window.APP_CONFIG = {
 <script src="notes.js"></script>
 <script>(function () {
 "use strict";
-const BUILD = "21.11 16:37";
+const BUILD = "23.11 07:31";
 /* ===== p1: утилиты, конфиг, состояние, темы, иконки ===== */
 const LSK = { cfg: "mytasks_cfg_v1", theme: "mytasks_theme_v1", cache: "mytasks_cache_v1", pending: "mytasks_pending_v1", view: "mytasks_view_v1", prefs: "mytasks_prefs_v1", notified: "mytasks_notified_v1" };
 const jget = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
@@ -1084,7 +1084,7 @@ function deleteTask(id) {
 }
 
 /* ----- файлы (Supabase Storage, приватный бакет attachments) ----- */
-async function uploadFile(file, tid) {
+async function uploadFile(file, tid, dir) {
   const t = S.tasks[tid || selId]; if (!t || !file) return false;
   if (/^image\//.test(file.type)) file = await shrinkImage(file);
   if (file.size > 20 * 1024 * 1024) { toast("«" + file.name + "» больше 20 МБ"); return false; }
@@ -1094,7 +1094,7 @@ async function uploadFile(file, tid) {
     let r = await xhrUpload(path, file, (l, tt) => { const a = UP.act[uk]; if (a) { a.loaded = l; a.total = tt || a.total; upTick(); } });
     if (r.error && r.net) r = await sb.storage.from("attachments").upload(path, file, { contentType: file.type || "application/octet-stream" });   // XHR не вышел (сеть/CORS) — штатный путь без процентов
     if (r.error) { toast("Не загрузилось: " + (/bucket/i.test(r.error.message) ? "нет хранилища — выполните migration_v2.sql" : /size|large|exceed/i.test(r.error.message) ? "файл слишком большой для хранилища" : r.error.message)); return false; }
-    const cur = S.tasks[t.id] || t; ui.st = undefined; upd(t.id, { files: (cur.files || []).concat([{ name: file.name, path, size: file.size }]) }); render(); toast("Файл добавлен"); return true;
+    const cur = S.tasks[t.id] || t; ui.st = undefined; upd(t.id, { files: (cur.files || []).concat([dir ? { name: file.name, path, size: file.size, dir } : { name: file.name, path, size: file.size }]) }); render(); toast("Файл добавлен"); return true;
   } catch (e) { toast("Не загрузилось: " + errText(e)); return false; }
   finally { delete UP.act[uk]; UP.done++; upTick(true); render(); }
 }
@@ -1124,19 +1124,19 @@ function xhrUpload(path, file, onp) {
     x.send(file);
   });
 }
-async function uploadAll(files, tid, conc) {   // по 3 файла одновременно; возвращает число успешных
+async function uploadAll(files, tid, conc, dir) {   // по 3 файла одновременно; возвращает число успешных
   files = [...files]; let n = 0, i = 0;
-  await Promise.all(Array.from({ length: Math.min(conc || 3, files.length) }, async () => { while (i < files.length) { const f = files[i++]; if (await uploadFile(f, tid)) n++; } }));
+  await Promise.all(Array.from({ length: Math.min(conc || 3, files.length) }, async () => { while (i < files.length) { const f = files[i++]; if (await uploadFile(f, tid, dir)) n++; } }));
   return n;
 }
-async function fileTransfer(files) {   // файлы с компьютера без открытой задачи: новая задача в списке «Файлы» + вложения (личная «перекидка» на телефон)
+async function fileTransfer(files, dir) {   // файлы с компьютера без открытой задачи: новая задача в списке «Файлы» + вложения (личная «перекидка» на телефон)
   files = [...files].filter(f => f && f.size >= 0); if (!files.length || !S.user) return;
   let l = listsArr().find(x => /^файлы$/i.test(x.name));
   if (!l) { l = { id: uid(), name: "Файлы", icon: "📎", position: listsArr().length, created_at: nowISO(), group_name: null, color: null }; S.lists[l.id] = l; mark("lists", l.id, "u"); }
   const d = new Date(), z = n => String(n).padStart(2, "0");
   const t = addTask({ list_id: l.id, title: (files.length === 1 ? files[0].name : "Файлы " + z(d.getDate()) + "." + z(d.getMonth() + 1) + " " + z(d.getHours()) + ":" + z(d.getMinutes())).slice(0, 200) });
-  goView("files"); render(); let n = 0;
-  n = await uploadAll(files, t.id);
+  goView("files"); if (dir) ui.fdir = dir; render(); let n = 0;
+  n = await uploadAll(files, t.id, 3, dir || undefined);
   if (!n) { upd(t.id, {}); }
   toast(n ? "Готово: " + n + " файл(ов) в «Файлах» — на телефоне они тоже будут" : "Ничего не загрузилось");
 }
@@ -1221,22 +1221,41 @@ function filesAll() {
   Object.values(S.tasks).forEach(t => { if (t.list_id === l.id && !t.parent_id && t.files) t.files.forEach((f, i) => out.push({ f, t, i })); });
   return out.sort((a, b) => String(b.t.created_at || "").localeCompare(String(a.t.created_at || "")) || a.i - b.i);
 }
+const fDirs = () => { const s = new Set(PR.fdirs || []); filesAll().forEach(x => { if (x.f.dir) s.add(x.f.dir); }); return [...s].sort((a, b) => a.localeCompare(b, "ru")); };
+function fAddDir(n) { PR.fdirs = PR.fdirs || []; if (PR.fdirs.indexOf(n) < 0) { PR.fdirs.push(n); savePrefs(); } }
+function fAskName(def, old) {   // имя новой папки: непустое, до 60 символов, без повторов
+  const r = prompt(old ? "Новое название папки" : "Название папки", def || ""); if (r === null) return "";
+  const n = r.trim().replace(/\s+/g, " ").slice(0, 60); if (!n) return "";
+  if (fDirs().some(x => x.toLowerCase() === n.toLowerCase() && x !== old)) { toast("Папка «" + n + "» уже есть"); return ""; }
+  return n;
+}
+function fMoveDir(oldN, newN) {   // переименовать (newN) или распустить (newN = null → файлы в корень) папку во всех файлах
+  const by = {}; filesAll().forEach(x => { if (x.f.dir === oldN) (by[x.t.id] = by[x.t.id] || []).push(x.i); });
+  Object.keys(by).forEach(id => { const t = S.tasks[id], fl = t.files.map((f, k) => { if (by[id].indexOf(k) < 0) return f; const o = Object.assign({}, f); if (newN) o.dir = newN; else delete o.dir; return o; }); ui.st = undefined; upd(id, { files: fl }); });
+}
+function fSetDir(t, i, dir) { const fl = t.files.map((x, k) => { if (k !== i) return x; const o = Object.assign({}, x); if (dir) o.dir = dir; else delete o.dir; return o; }); ui.st = undefined; upd(t.id, { files: fl }); }
 const fExt = f => ((f.name.match(/\.([A-Za-z0-9]{1,6})$/) || [, ""])[1] || "файл").toUpperCase();
 function filesMainHTML(vi) {
-  const q = (ui.fq || "").trim().toLowerCase(), all = filesAll(), z = "var(--z,1)", so = ui.fsort || "date";
-  let rows = q ? all.filter(x => x.f.name.toLowerCase().indexOf(q) >= 0) : all.slice();
+  const q = (ui.fq || "").trim().toLowerCase(), all = filesAll(), z = "var(--z,1)", so = ui.fsort || "date", dirs = fDirs();
+  if (ui.fdir && dirs.indexOf(ui.fdir) < 0) ui.fdir = null;
+  const cur = ui.fdir || "";
+  let rows = q ? all.filter(x => x.f.name.toLowerCase().indexOf(q) >= 0) : all.filter(x => (x.f.dir || "") === cur);   // поиск — по всем папкам сразу
   if (so === "name") rows.sort((a, b) => a.f.name.localeCompare(b.f.name, "ru")); else if (so === "size") rows.sort((a, b) => (b.f.size || 0) - (a.f.size || 0));
   const sl = ui.fsel, dt = iso => { if (!iso) return ""; const d = new Date(iso); return d.getDate() + " " + MONS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : ""); };
-  const row = x => '<div class="frow' + (sl && sl.t === x.t.id && sl.i === x.i ? " on" : "") + '" data-a="fsel" data-t="' + x.t.id + '" data-i="' + x.i + '">' +
+  const row = x => '<div class="frow' + (sl && sl.t === x.t.id && sl.i === x.i ? " on" : "") + '"' + (isMobile() ? "" : ' draggable="true"') + ' data-a="fsel" data-t="' + x.t.id + '" data-i="' + x.i + '">' +
     (isImg(x.f) ? '<img class="fthm athumb" data-path="' + esc(x.f.path) + '" alt=""' + (imgUrl(x.f.path) ? ' src="' + esc(imgUrl(x.f.path)) + '"' : "") + ">" : '<span class="fthm fico">' + esc(fExt(x.f).slice(0, 4)) + "</span>") +
-    '<div class="fmid"><div class="fnm" title="' + esc(x.f.name) + '">' + esc(x.f.name) + '</div><div class="fsb">' + fmtSize(x.f.size || 0) + (x.t.created_at ? " · " + dt(x.t.created_at) : "") + '</div></div>' +
+    '<div class="fmid"><div class="fnm" title="' + esc(x.f.name) + '">' + esc(x.f.name) + '</div><div class="fsb">' + fmtSize(x.f.size || 0) + (x.t.created_at ? " · " + dt(x.t.created_at) : "") + (q && x.f.dir ? " · 📁 " + esc(x.f.dir) : "") + '</div></div>' +
     '<button class="ibtn fdlb" data-a="fdl" data-t="' + x.t.id + '" data-i="' + x.i + '" title="Скачать">' + ic("dl", 18) + '</button><button class="ibtn fdlb fdelb" data-a="fdel" data-t="' + x.t.id + '" data-i="' + x.i + '" title="Удалить">' + ic("trash", 18) + "</button></div>";
+  const drow = n => { const fs = all.filter(x => x.f.dir === n), e = esc(n); return '<div class="frow fdirrow" data-a="fdopen" data-n="' + e + '"><span class="fthm fico" style="font-size:calc(20px*' + z + ')">📁</span><div class="fmid"><div class="fnm" title="' + e + '">' + e + '</div><div class="fsb">' + (fs.length ? fs.length + " шт. · " + fmtSize(fs.reduce((a, x) => a + (x.f.size || 0), 0)) : "пусто") + '</div></div>' +
+    '<button class="ibtn fdlb" data-a="fdren" data-n="' + e + '" title="Переименовать">' + ic("pen", 18) + '</button><button class="ibtn fdlb fdelb" data-a="fddel" data-n="' + e + '" title="Удалить папку (файлы вернутся в корень)">' + ic("trash", 18) + "</button></div>"; };
+  const crumbs = cur && !q ? '<div class="fcrumbs"><span class="fcr" data-a="fdroot">Файлы</span><span style="opacity:.5"> › </span><b>' + esc(cur) + "</b></div>" : "";
+  const showDirs = !q && !cur && dirs.length, empty = !rows.length && !showDirs;
   const sel = '<select id="fsort" style="font:inherit;font-size:calc(13px*' + z + ');padding:5px 8px;border:1px solid var(--ln);border-radius:16px;background:var(--card);color:var(--tx)" title="Сортировка">' + [["date", "Новые сверху"], ["name", "По названию"], ["size", "По размеру"]].map(o => '<option value="' + o[0] + '"' + (so === o[0] ? " selected" : "") + ">" + o[1] + "</option>").join("") + "</select>";
   return '<div id="main" class="pane" style="flex:1">' + mtopHTML(vi, rows.length, "") + '<div class="mhead' + (isMobile() ? " mhide" : "") + '"><h1>' + ic("clip", 22) + "<span>Файлы</span></h1><span class=\"sp\"></span></div>" +
-    '<div class="scroll" id="list"><div style="padding:6px 16px 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" data-a="fpick">' + ic("plus", 16) + " Загрузить</button>" +
+    '<div class="scroll" id="list"><div style="padding:6px 16px 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" data-a="fpick">' + ic("plus", 16) + " Загрузить</button>" + (cur || q ? "" : '<button class="btn ghost" data-a="fdnew">📁 Папка</button>') +
     '<div class="searchbox" style="flex:1;min-width:150px;max-width:340px">' + ic("search", 16) + '<input id="fq" placeholder="Поиск по названию" autocomplete="off" value="' + esc(ui.fq || "") + '"></div>' + sel +
-    '<span style="color:var(--sub);font-size:calc(13px*' + z + ')">' + (all.length ? all.length + " шт. · " + fmtSize(all.reduce((a, x) => a + (x.f.size || 0), 0)) : "") + "</span></div>" +
-    (rows.length ? '<div class="flist">' + rows.map(row).join("") + "</div>" : '<div style="text-align:center;padding:60px 16px;color:var(--sub)">' + (all.length ? "Ничего не найдено" : "Пока пусто. Перетащи файлы в окно, вставь Ctrl+V или нажми «Загрузить». С телефона — «Поделиться» → Мои дела.") + "</div>") +
+    '<span style="color:var(--sub);font-size:calc(13px*' + z + ')">' + (all.length ? all.length + " шт. · " + fmtSize(all.reduce((a, x) => a + (x.f.size || 0), 0)) : "") + "</span></div>" + crumbs +
+    (!empty ? '<div class="flist">' + (showDirs ? dirs.map(drow).join("") : "") + rows.map(row).join("") + "</div>" : '<div style="text-align:center;padding:60px 16px;color:var(--sub)">' + (q ? "Ничего не найдено" : cur ? "В папке пока пусто. Перетащи сюда файлы или выбери папку в карточке файла." : "Пока пусто. Перетащи файлы в окно, вставь Ctrl+V или нажми «Загрузить». С телефона — «Поделиться» → Мои дела.") + "</div>") +
     "</div></div>" + (setTimeout(imgHydrate, 0), "");
 }
 function filesDetailHTML() {
@@ -1252,6 +1271,7 @@ function filesDetailHTML() {
     '<div class="dcard">' + info("clip", "Тип: " + esc(fExt(f))) + info("sort", "Размер: " + fmtSize(f.size || 0) + (f.size ? " (" + f.size.toLocaleString("ru-RU") + " Б)" : "")) +
     (d ? info("cal", "Загружен: " + d.getDate() + " " + MONS[d.getMonth()] + " " + d.getFullYear() + ", " + pad2(d.getHours()) + ":" + pad2(d.getMinutes())) : "") +
     (t.files.length > 1 ? info("copy", "Загружен вместе ещё с " + (t.files.length - 1) + " файл(ами)") : "") + "</div>" +
+    '<div class="dcard"><div class="drow" style="cursor:default;gap:10px">📁<span class="dtx" style="flex:0 0 auto">Папка</span><select id="f-dir" style="flex:1;min-width:0;font:inherit;padding:5px 8px;border:1px solid var(--ln);border-radius:10px;background:var(--card);color:var(--tx)"><option value="">— без папки —</option>' + fDirs().map(n => '<option value="' + esc(n) + '"' + (f.dir === n ? " selected" : "") + ">" + esc(n) + "</option>").join("") + '<option value="__new">＋ Новая папка…</option></select></div></div>' +
     '<div class="dcard">' + act("dl", "Скачать", "fdl") + (img ? act("img", "Открыть крупно", "fopen") : "") + act("link", "Скопировать ссылку (действует 1 час)", "fcopy") + act("trash", "Удалить", "fdel", "od") + "</div></div></div>" + (setTimeout(imgHydrate, 0), "");
 }
 async function fileDownload(f) {
@@ -2803,7 +2823,7 @@ function desktopInit(app) {
 const mCSS = `
 .taskrow.sub.msel,.taskrow.msel{background:var(--sel);box-shadow:inset 0 0 0 2px var(--acc)}
 .mtop.msb{animation:msbin .15s ease-out;background:rgba(0,0,0,.55);color:#fff;border-radius:0;gap:10px} @keyframes msbin{from{opacity:0}} .mtop.msb .ibtn{color:#fff} body .pop.mtp{top:56px!important;bottom:auto!important;left:auto!important;right:10px!important;width:264px!important;min-width:0;max-height:76vh;overflow:auto;border-radius:8px;transform:none}
-.flist{padding:0 8px 90px} .frow{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;cursor:pointer;min-width:0} .frow:hover{background:var(--hov,rgba(127,127,127,.1))} .frow.on{background:var(--sel,rgba(127,127,127,.16))} .fthm{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:0 0 auto;background:rgba(127,127,127,.12)} .fthm.fico{display:flex;align-items:center;justify-content:center;font-size:calc(11px*var(--z,1));font-weight:700;color:var(--sub);letter-spacing:.3px} .fmid{flex:1;min-width:0} .fnm{font-size:calc(13px*var(--z,1));font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .fsb{font-size:calc(12.5px*var(--z,1));color:var(--sub)} .favg{display:flex;flex-wrap:wrap;gap:10px}.favb{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;padding:8px 4px;border:2px solid var(--ln);border-radius:12px;background:transparent;color:var(--tx);cursor:pointer;font-size:calc(12px*var(--z,1))}.favb img{width:36px;height:36px;border-radius:9px}.favb.on{border-color:var(--acc)}.trgrow{padding:0 12px 6px}.trgo{width:100%;border:1.5px dashed var(--acc);background:transparent;color:var(--acc);border-radius:14px;padding:9px;font-weight:700;font-size:calc(14px*var(--z,1))}
+.fdrop{outline:2px dashed var(--acc);outline-offset:-2px;border-radius:10px}.fcrumbs{padding:2px 18px 8px;font-size:calc(14px*var(--z,1));color:var(--sub)}.fcr{cursor:pointer;color:var(--acc)}.fcr:hover{text-decoration:underline}.flist{padding:0 8px 90px} .frow{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;cursor:pointer;min-width:0} .frow:hover{background:var(--hov,rgba(127,127,127,.1))} .frow.on{background:var(--sel,rgba(127,127,127,.16))} .fthm{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:0 0 auto;background:rgba(127,127,127,.12)} .fthm.fico{display:flex;align-items:center;justify-content:center;font-size:calc(11px*var(--z,1));font-weight:700;color:var(--sub);letter-spacing:.3px} .fmid{flex:1;min-width:0} .fnm{font-size:calc(13px*var(--z,1));font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .fsb{font-size:calc(12.5px*var(--z,1));color:var(--sub)} .favg{display:flex;flex-wrap:wrap;gap:10px}.favb{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;padding:8px 4px;border:2px solid var(--ln);border-radius:12px;background:transparent;color:var(--tx);cursor:pointer;font-size:calc(12px*var(--z,1))}.favb img{width:36px;height:36px;border-radius:9px}.favb.on{border-color:var(--acc)}.trgrow{padding:0 12px 6px}.trgo{width:100%;border:1.5px dashed var(--acc);background:transparent;color:var(--acc);border-radius:14px;padding:9px;font-weight:700;font-size:calc(14px*var(--z,1))}
 .ovl.trg{z-index:90}.sheet.trgs{width:min(480px,100%);max-height:94vh;display:flex;flex-direction:column;gap:12px;padding:16px}
 .trg-h{display:flex;align-items:center;gap:10px;font-size:calc(17px*var(--z,1))}.trg-c{color:var(--sub);font-size:calc(14px*var(--z,1))}.trg-bar{height:6px;border-radius:3px;background:var(--ln);overflow:hidden}.trg-bar i{display:block;height:100%;background:var(--acc);transition:width .25s}
 .trg-card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:18px 16px;min-height:130px;display:flex;flex-direction:column;gap:10px;justify-content:center}.trg-t{font-size:calc(22px*var(--z,1));font-weight:700;line-height:1.25;word-break:break-word}
@@ -3353,7 +3373,7 @@ const bkActs = {
 };
 
 // ---- p10: подзадачи, фильтры, комбинированная сортировка, своя оценка времени ----
-PR.flt = PR.flt || {}; PR.subClosed = PR.subClosed || {}; PR.subOpen = PR.subOpen || {}; PR.subs = "top"; PR.subOpen = {}; if (!PR.subs) PR.subs = "top"; if (!PR.subsV2) { PR.subsV2 = 1; PR.subs = "top"; }
+PR.flt = PR.flt || {}; Object.keys(PR.flt).forEach(k => { if (PR.flt[k] && PR.flt[k].date === "week") PR.flt[k].date = "wk0"; }); PR.subClosed = PR.subClosed || {}; PR.subOpen = PR.subOpen || {}; PR.subs = "top"; PR.subOpen = {}; if (!PR.subs) PR.subs = "top"; if (!PR.subsV2) { PR.subsV2 = 1; PR.subs = "top"; }
 let subIdx = {};
 function buildSubIdx() {
   subIdx = {};
@@ -3495,7 +3515,7 @@ function subBlock(t) {
     '<form class="drow stp act subadd" data-pid="' + t.id + '" style="padding:0"><button type="submit" class="subplus" title="Добавить подзадачу">' + ic("plus", 18) + '</button><input id="sub-' + t.id + '" autocomplete="off" enterkeyhint="send" placeholder="Добавить подзадачу" style="color:var(--acc)"></form></div>';
 }
 // ----- фильтры -----
-const FLT_DATES = [["", "Любой срок"], ["over", "Просрочено"], ["today", "Сегодня"], ["todover", "Сегодня и просроченные"], ["tom", "Завтра"], ["week", "Ближайшие 7 дней"], ["nodue", "Без срока"]];
+const FLT_DATES = [["", "Любой срок"], ["over", "Просрочено"], ["today", "Сегодня"], ["todover", "Сегодня и просроченные"], ["tom", "Завтра"], ["wk0", "Эта неделя"], ["wk1", "Следующая неделя"], ["nodue", "Без срока"]];
 function passFlt(t) {
   const f = PR.flt[view]; if (!f) return true;
   if (f.star && !t.starred) return false;
@@ -3509,7 +3529,8 @@ function passFlt(t) {
       case "today": return D === today;
       case "todover": return D <= today;
       case "tom": return false;                               // «завтра» для выполненных не бывает
-      case "week": return D >= addDays(today, -6) && D <= today;   // последние 7 дней
+      case "wk0": return D >= wkMon(today) && D <= addDays(wkMon(today), 6);   // закрыты на этой неделе (пн–вс)
+      case "wk1": return false;                               // «следующей недели» для выполненных не бывает
     }
   }
   switch (f.date) {
@@ -3517,7 +3538,8 @@ function passFlt(t) {
     case "today": if (t.due !== today) return false; break;
     case "todover": if (!(t.due && t.due <= today)) return false; break;
     case "tom": if (t.due !== addDays(today, 1)) return false; break;
-    case "week": if (!(t.due && t.due >= today && t.due <= addDays(today, 7))) return false; break;
+    case "wk0": if (!(t.due && t.due <= addDays(wkMon(today), 6))) return false; break;   // эта неделя (пн–вс) + просроченные
+    case "wk1": if (!(t.due && t.due >= addDays(wkMon(today), 7) && t.due <= addDays(wkMon(today), 13))) return false; break;
     case "nodue": if (t.due) return false; break;
   }
   return true;
@@ -3529,7 +3551,7 @@ function fltBtns() {
 }
 function mToolsHTML() {
   const sc = PR.sort[view], g = getGroup(view), gr = g !== (view === "planned" ? "due" : "none"), n = fltCount(), any = !!sc || gr || n, f = PR.flt[view] || {};
-  const FS = { over: "Просрочено", today: "Сегодня", todover: "Сегодня+просроч.", tom: "Завтра", week: "7 дней", nodue: "Без срока" }, GS = { due: "Срок", imp: "Важность", cat: "Категория", list: "Список" };
+  const FS = { over: "Просрочено", today: "Сегодня", todover: "Сегодня+просроч.", tom: "Завтра", wk0: "Эта неделя", wk1: "След. неделя", nodue: "Без срока" }, GS = { due: "Срок", imp: "Важность", cat: "Категория", list: "Список" };
   const parts = []; if (f.date) parts.push(FS[f.date] || "Срок"); if (f.star) parts.push("Важные"); if (f.rem) parts.push("С напоминанием"); if (f.cat) parts.push(esc(f.cat));
   const fl = n ? (parts[0] || "Фильтр") + (parts.length > 1 ? " +" + (parts.length - 1) : "") : "Фильтр";
   return '<div class="mtools"><button class="mt ' + (sc ? "on" : "") + '" data-a="pop" data-p="sort">' + ic(sc && sc.dir === -1 ? "down" : "sort", 18) + '<span>' + (sc && SORTS[sc.by] ? esc(SORTS[sc.by].n.split(" ")[0]) : "Сортир.") + '</span></button><button class="mt ' + (gr ? "on" : "") + '" data-a="pop" data-p="group">' + ic("group", 18) + '<span>' + (gr ? (GS[g] || "Группы") : "Группы") + '</span></button><button class="mt flx ' + (n ? "on" : "") + '" data-a="pop" data-p="filter">' + ic("flt", 18) + '<span>' + fl + '</span></button>' +
@@ -3544,7 +3566,7 @@ function filterPopHTML() {
   const f = PR.flt[view] || {}, it = (k, v, label, on) => '<div class="pi" data-a="flt" data-k="' + k + '" data-v="' + esc(v) + '"><span style="width:20px">' + (on ? "☑" : "☐") + "</span>" + label + "</div>";
   const cats = {}; Object.values(S.tasks).forEach(t => { if (!t.done && t.category) t.category.split(",").forEach(c => { c = c.trim().toLowerCase(); if (c) cats[c] = (cats[c] || 0) + 1; }); });
   const cl = Object.keys(cats).sort((a, b) => cats[b] - cats[a]).slice(0, 12);
-  return '<div class="ptitle">Фильтры — все условия вместе</div>' + '<div style="padding:0 14px 6px;font-size:12px;color:var(--sub)">У выполненных даты считаются по дню завершения: «Сегодня» — закрыты сегодня, «7 дней» — за последнюю неделю</div>' + FLT_DATES.map(d => it("date", d[0], d[1], (f.date || "") === d[0])).join("") + '<div class="psep"></div>' +
+  return '<div class="ptitle">Фильтры — все условия вместе</div>' + '<div style="padding:0 14px 6px;font-size:12px;color:var(--sub)">У выполненных даты считаются по дню завершения: «Сегодня» — закрыты сегодня, «Эта неделя» — закрыты с понедельника. «Эта неделя» показывает и просроченные</div>' + FLT_DATES.map(d => it("date", d[0], d[1], (f.date || "") === d[0])).join("") + '<div class="psep"></div>' +
     it("star", "1", "Только важные", !!f.star) + it("rem", "1", "Только с напоминанием", !!f.rem) +
     (cl.length ? '<div class="psep"></div><div class="ptitle">Категория</div>' + cl.map(c => it("cat", c, "#" + esc(c), f.cat === c)).join("") : "") +
     '<div class="psep"></div><div class="pi" data-a="fltclr" data-k="all" style="color:var(--acc)">Сбросить фильтры</div>';
@@ -5659,7 +5681,7 @@ function exportJson() {
 
 /* ----- кнопка «Назад» на телефоне: закрывает верхний слой (меню, карточку, шторку…), а не приложение ----- */
 let hDepth = 0, hSkip = 0, fDown = false;   // fDown: палец на экране — историю не трогаем (Chrome считает записи без жеста «пропускаемыми», и «Назад» выкидывало из приложения после долгого тапа)
-const layerDepth = () => !isMobile() || !S.user ? 0 : (ui.trg ? 1 : 0) + (ui.mv ? 1 : 0) + (ui.rit ? 1 : 0) + (ui.trk ? 1 : 0) + (ui.noteFull ? 1 : 0) + (ui.dsheet ? 1 : 0) + (ui.pop ? 1 : 0) + (mIds().length ? 1 : 0) + (ui.qa ? 1 : 0) + (ui.settings ? 1 : 0) + (selId ? 1 : 0) + (view === "files" && ui.fsel ? 1 : 0) + (ui.left ? 0 : 1) + (ui.msearch ? 1 : 0) + innerLayers();
+const layerDepth = () => !isMobile() || !S.user ? 0 : (ui.trg ? 1 : 0) + (ui.mv ? 1 : 0) + (ui.rit ? 1 : 0) + (ui.trk ? 1 : 0) + (ui.noteFull ? 1 : 0) + (ui.dsheet ? 1 : 0) + (ui.pop ? 1 : 0) + (mIds().length ? 1 : 0) + (ui.qa ? 1 : 0) + (ui.settings ? 1 : 0) + (selId ? 1 : 0) + (view === "files" && ui.fsel ? 1 : 0) + (view === "files" && ui.fdir && !ui.fsel ? 1 : 0) + (ui.left ? 0 : 1) + (ui.msearch ? 1 : 0) + innerLayers();
 function innerLayers() { return innerLayers0() + (ui.settings && !ui.smenu ? 1 : 0); }   // подраздел настроек — свой слой «Назад»
 function innerLayers0() {
   if (view === "food" && ui.nu && ui.nu.sheet) return ["grams", "custom", "scan", "quick"].indexOf(ui.nu.sheet) >= 0 ? 2 : 1;
@@ -5685,14 +5707,14 @@ function onBack() {
   if (hSkip > 0) { hSkip--; return; }
   if (hDepth > 0) hDepth--;
   if (innerBack()) { render(); return; }
-  if (view === "files" && ui.fsel) ui.fsel = null; else if (ui.trg) ui.trg = null; else if (ui.mv) ui.mv = null; else if (ui.rit) ui.rit = false; else if (ui.trk) ui.trk = false; else if (ui.noteFull) ui.noteFull = false; else if (ui.dsheet) ui.dsheet = null; else if (ui.pop) closePop(); else if (mIds().length) mClear(); else if (ui.qa) ui.qa = null; else if (ui.settings) { if (isMobile() && !ui.smenu) { ui.smenu = true; ui.msg = ""; } else ui.settings = false; }
+  if (view === "files" && ui.fsel) ui.fsel = null; else if (view === "files" && ui.fdir) ui.fdir = null; else if (ui.trg) ui.trg = null; else if (ui.mv) ui.mv = null; else if (ui.rit) ui.rit = false; else if (ui.trk) ui.trk = false; else if (ui.noteFull) ui.noteFull = false; else if (ui.dsheet) ui.dsheet = null; else if (ui.pop) closePop(); else if (mIds().length) mClear(); else if (ui.qa) ui.qa = null; else if (ui.settings) { if (isMobile() && !ui.smenu) { ui.smenu = true; ui.msg = ""; } else ui.settings = false; }
   else if (selId) { if (fastClose()) return; selId = null; } else if (ui.msearch) { acts.msclose(); return; } else if (!ui.left) { if (menuSlideOpen()) return; ui.left = true; }
   render();
 }
 
 /* ----- действия по клику ----- */
 const closePop = () => { ui.pop = null; ui.dtp = null; ui.remXi = null; };
-const goView = v => { if (v !== view) { ui.vfade = 1; mClear(); } ui.sf = null; ui.fsel = null; view = v; ui.fresh = null; jset(LSK.view, view); selId = null; ui.left = false; ui.limit = 300; ui.q = ""; ui.sugg = false; ui.msearch = false; };
+const goView = v => { if (v !== view) { ui.vfade = 1; mClear(); ui.fdir = null; } ui.sf = null; ui.fsel = null; view = v; ui.fresh = null; jset(LSK.view, view); selId = null; ui.left = false; ui.limit = 300; ui.q = ""; ui.sugg = false; ui.msearch = false; };
 const patchTask = (id, o) => { const d = draftOf(id); if (d) Object.assign(d, o); else upd(id, o); };
 const setDue = (id, v) => {
   const map = { today: today, tom: addDays(today, 1), week: nextMonday(), clear: null };
@@ -5741,9 +5763,18 @@ const acts = {
   qaclose(a, e) { if (e.target !== a) return; ui.qa = null; closePop(); render(); },
   qatog(a) { const f = a.dataset.f; ui.qa[f] = !ui.qa[f]; render(); const i = $("qa-input"); if (i) i.focus(); },
   msearch() { ui.left = false; ui.msearch = true; render(); const q = $("q"); if (q) q.focus(); },
-  fpick() { const i = document.createElement("input"); i.type = "file"; i.multiple = true; i.onchange = () => { if (i.files.length) fileTransfer(i.files); }; i.click(); },
+  fpick() { const i = document.createElement("input"); i.type = "file"; i.multiple = true; i.onchange = () => { if (i.files.length) fileTransfer(i.files, ui.fdir || null); }; i.click(); },
   fsel(a) { ui.fsel = { t: a.dataset.t, i: +a.dataset.i }; render(); },
   fclose() { ui.fsel = null; render(); },
+  fdnew() { const n = fAskName(""); if (!n) return; fAddDir(n); ui.fdir = n; ui.fsel = null; render(); },
+  fdopen(a) { ui.fdir = a.dataset.n; ui.fsel = null; ui.fq = ""; render(); },
+  fdroot() { ui.fdir = null; ui.fsel = null; render(); },
+  fdren(a) { const old = a.dataset.n, n = fAskName(old, old); if (!n || n === old) return; fMoveDir(old, n); PR.fdirs = (PR.fdirs || []).filter(x => x !== old); fAddDir(n); if (ui.fdir === old) ui.fdir = n; toast("Папка переименована"); render(); },
+  fddel(a) {
+    const n = a.dataset.n, k = filesAll().filter(x => x.f.dir === n).length;
+    if (!confirm("Удалить папку «" + n + "»?" + (k ? " " + k + " файл(ов) вернутся в корень, сами файлы не удаляются." : ""))) return;
+    fMoveDir(n, null); PR.fdirs = (PR.fdirs || []).filter(x => x !== n); savePrefs(); if (ui.fdir === n) ui.fdir = null; toast("Папка удалена"); render();
+  },
   async fcopy(a) {
     const t = S.tasks[a.dataset.t], f = t && t.files && t.files[+a.dataset.i]; if (!f) return;
     try { const r = await sb.storage.from("attachments").createSignedUrl(f.path, 3600, { download: f.name }); if (r.error || !r.data) return toast("Не удалось сделать ссылку"); await navigator.clipboard.writeText(r.data.signedUrl); toast("Ссылка скопирована — действует 1 час"); } catch (e) { toast("Не удалось скопировать: " + errText(e)); }
@@ -7328,6 +7359,7 @@ function init() {
     if (id === "jr-per") { jrState().per = e.target.value; jrState().lim = 40; render(); return; }
     if (id === "jr-file") { const f = e.target.files && e.target.files[0]; if (f) jrImport(f); e.target.value = ""; return; }
     if (id === "fsort") { ui.fsort = e.target.value; render(); return; }
+    if (id === "f-dir") { const sl = ui.fsel, t = sl && S.tasks[sl.t]; if (!t || !t.files || !t.files[sl.i]) return; let v = e.target.value; if (v === "__new") { v = fAskName(""); if (!v) { render(); return; } fAddDir(v); } fSetDir(t, sl.i, v); toast(v ? "Перенесено в «" + v + "»" : "Файл в корне"); render(); return; }
     if (id === "f-name") { const sl = ui.fsel, t = sl && S.tasks[sl.t], nm = e.target.value.trim().slice(0, 200); if (t && t.files && t.files[sl.i] && nm) { const fl = t.files.map((x, k) => k === sl.i ? Object.assign({}, x, { name: nm }) : x); ui.st = undefined; upd(t.id, t.files.length === 1 ? { files: fl, title: nm } : { files: fl }); } render(); return; }
     if (id === "s-showday") { PR.showDay = e.target.checked; if (!PR.showDay && view === "day") goView(HOME()); savePrefs(); render(); return; }
     if (id === "sf-l" || id === "sf-c") { ui.sf = ui.sf || {}; ui.sf[id === "sf-l" ? "l" : "c"] = e.target.value; render(); return; }
@@ -7387,6 +7419,11 @@ function init() {
   });
   /* перетаскивание задачи на список */
   app.addEventListener("dragstart", e => { const r = e.target.closest && e.target.closest(".taskrow"); if (r) { e.dataTransfer.setData("text/plain", ui.multi && ui.multi[r.dataset.id] && mIds().length > 1 ? mIds().join(",") : r.dataset.id); e.dataTransfer.effectAllowed = "move"; ui.dragId = r.dataset.id; } });
+  app.addEventListener("dragstart", e => { const r = e.target.closest && e.target.closest(".frow[data-t]"); if (r) { ui.fdrag = { t: r.dataset.t, i: +r.dataset.i }; e.dataTransfer.setData("text/plain", "file"); e.dataTransfer.effectAllowed = "move"; } });
+  const fTgt = e => e.target.closest && (e.target.closest(".fdirrow") || e.target.closest(".fcr"));
+  app.addEventListener("dragover", e => { const c = ui.fdrag && fTgt(e); document.querySelectorAll(".fdrop").forEach(x => { if (x !== c) x.classList.remove("fdrop"); }); if (c) { e.preventDefault(); c.classList.add("fdrop"); } });
+  app.addEventListener("drop", e => { const c = ui.fdrag && fTgt(e); document.querySelectorAll(".fdrop").forEach(x => x.classList.remove("fdrop")); if (!c) return; e.preventDefault(); const d = ui.fdrag, t = S.tasks[d.t]; ui.fdrag = null; if (!t || !t.files || !t.files[d.i]) return; const n = c.classList.contains("fdirrow") ? c.dataset.n : ""; fSetDir(t, d.i, n); toast(n ? "Перенесено в «" + n + "»" : "Файл в корне"); render(); });
+  app.addEventListener("dragend", () => { ui.fdrag = null; document.querySelectorAll(".fdrop").forEach(x => x.classList.remove("fdrop")); });
   app.addEventListener("dragend", () => { ui.dragId = null; document.querySelectorAll(".taskrow.dropb").forEach(x => x.classList.remove("dropb")); });
   const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].indexOf("Files") >= 0;   // перетаскивание файлов С КОМПЬЮТЕРА (внутренние перетаскивания задач не трогаем)
   document.addEventListener("dragover", e => { if (!S.user || isLite() || !hasFiles(e)) return; e.preventDefault(); e.stopPropagation(); document.body.classList.toggle("asrv", view === "asr"); document.body.classList.add("dropfile"); }, true);
@@ -7395,7 +7432,7 @@ function init() {
     if (!S.user || isLite() || !hasFiles(e)) return; e.preventDefault(); e.stopPropagation(); document.body.classList.remove("dropfile");
     const fs = [...e.dataTransfer.files]; if (!fs.length) return;
     if (view === "asr" && ASRM) { ASRM.add(fs); return; }   // в «Расшифровке» файл идёт на расшифровку, а не в «Файлы»
-    if (selId && S.tasks[selId]) uploadAll(fs, selId); else fileTransfer(fs);
+    if (selId && S.tasks[selId]) uploadAll(fs, selId); else fileTransfer(fs, view === "files" ? ui.fdir : null);
   }, true);
   app.addEventListener("dragover", e => { if (e.target.closest && e.target.closest(".chip[data-lid]")) return; const r = e.target.closest && e.target.closest("#main .taskrow"); if (r && ui.dragId && r.dataset.id !== ui.dragId) { e.preventDefault(); document.querySelectorAll(".taskrow.dropb").forEach(x => { if (x !== r) x.classList.remove("dropb"); }); r.classList.add("dropb"); } });
   app.addEventListener("drop", e => { if (e.target.closest && e.target.closest(".chip[data-lid]")) return; const r = e.target.closest && e.target.closest("#main .taskrow"); if (r && ui.dragId && r.dataset.id !== ui.dragId) { e.preventDefault(); const d = ui.dragId; ui.dragId = null; ordDrop(d, r.dataset.id); } });
