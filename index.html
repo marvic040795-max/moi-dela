@@ -66,7 +66,7 @@ window.APP_CONFIG = {
 <script src="notes.js"></script>
 <script>(function () {
 "use strict";
-const BUILD = "24.11 00:13";
+const BUILD = "27.11 10:34";
 /* ===== p1: утилиты, конфиг, состояние, темы, иконки ===== */
 const LSK = { cfg: "mytasks_cfg_v1", theme: "mytasks_theme_v1", cache: "mytasks_cache_v1", pending: "mytasks_pending_v1", view: "mytasks_view_v1", prefs: "mytasks_prefs_v1", notified: "mytasks_notified_v1" };
 const jget = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
@@ -4177,6 +4177,7 @@ function viewInfo() {
   if (view === "day") return { svg: "clock", name: "День", sub: "План и факт по часам" };
   if (view.indexOf("team:") === 0) { const u = TM.users.find(x => x.id === view.slice(5)); return { svg: "users", name: u ? (u.email || "?").split("@")[0] : "Сотрудник", sub: "Задачи сотрудника · ✎ править, ＋ поставить задачу" }; }
   if (view === "team") return { svg: "users", name: "Команда", sub: "Сотрудники: выбери человека — увидишь его дела, можно править и ставить задачи" };
+  if (view === "wkplan") return { svg: "cal", name: "План недели", sub: "Сетка Пн–Пт: задачи по часам + факт из журнала" };
   if (view === "week") return { svg: "ccheck", name: "Итоги недели", sub: "Последние 7 дней" };
   if (view === "food") return { svg: "food", name: "Питание", sub: "КБЖУ, вода и вес" };
   if (view === "files") return { svg: "clip", name: "Файлы", sub: "Хранилище: с компьютера на телефон и обратно" };
@@ -4383,7 +4384,7 @@ function weekMainHTML(vi) {
 // порядок пунктов левого меню: PR.mord = { top:[...], dia:[...], wrk:[...] } (задаётся в режиме «Порядок меню»)
 const MNU_TOP = [["myday", "Мой день"], ["day", "День по часам"], ["files", "Файлы"], ["dia", "Дневники"], ["wrk", "Работа"], ["lists", "Списки"], ["arch", "Архив"]];
 const MNU_DIA = [["journal", "note", "Журнал", "#8764b8"], ["food", "food", "Питание", "#e3680c"], ["health", "heart", "Здоровье", "#e5484d"], ["notes", "bulb", "Заметки", "#2b88d8"], ["know", "book", "Знания", "#7c5cff"], ["trk", "pin", "Трекер", "#107c10"]];
-const MNU_WRK = [["team", "users", "Команда", "#8764b8"], ["week", "ccheck", "Итоги недели", "#038387"], ["asr", "mic", "Расшифровка", "#c2410c"]];
+const MNU_WRK = [["team", "users", "Команда", "#8764b8"], ["wkplan", "cal", "План недели", "#0f6cbd"], ["week", "ccheck", "Итоги недели", "#038387"], ["asr", "mic", "Расшифровка", "#c2410c"]];
 function mnuOrder(k, items) {
   const ids = items.map(x => Array.isArray(x) ? x[0] : x), o = (PR.mord || {})[k] || [];
   const list = o.filter(x => ids.includes(x)).concat(ids.filter(x => !o.includes(x)));
@@ -5350,7 +5351,7 @@ function appHTML() {
     for (let i = items.length - 1; i >= 0; i--) if (hid(items[i])) items.splice(i, 1);
     for (let i = done.length - 1; i >= 0; i--) if (hid(done[i])) done.splice(i, 1); }
   done.sort((a, b) => String(b.done_at || "").localeCompare(String(a.done_at || "")));
-  return topHTML() + '<div id="body">' + leftHTML(c) + (view === "day" ? dayMainHTML(viewInfo()) : view === "week" ? weekMainHTML(viewInfo()) : view.indexOf("team") === 0 ? teamMainHTML(viewInfo()) : view === "journal" ? journalMainHTML(viewInfo()) : view === "files" ? filesMainHTML(viewInfo()) : view === "food" ? nutriMainHTML(viewInfo()) : view === "notes" ? (NTM ? NTM.html(viewInfo()) : "") : view === "know" ? (KNM ? KNM.html(viewInfo()) : "") : view === "asr" ? (ASRM ? ASRM.html(viewInfo()) : '<div id="main" class="pane" style="flex:1">' + mtopHTML(viewInfo(), 1, "") + '<div class="scroll" id="list"><div style="padding:70px 20px;text-align:center;color:var(--sub)">Загружаю «Расшифровку»…</div></div></div>') : view === "health" ? (HLM ? HLM.html(viewInfo()) : '<div id="main" class="pane" style="flex:1">' + mtopHTML(viewInfo(), 1, "") + '<div class="scroll" id="list"><div style="padding:70px 20px;text-align:center;color:var(--sub)">Загружаю «Здоровье»…</div></div></div>') : mainHTML(items, done, viewInfo())) + (view === "files" ? filesDetailHTML() : selId ? detailHTML(S.tasks[selId]) : "") + "</div>" + (ui.settings ? settingsHTML() : "") + noteFullHTML() + qaHTML() + popHTML() + dsheetHTML() + ritualHTML() + triageHTML() + mvHTML() + trkHTML() + tmeHTML();
+  return topHTML() + '<div id="body">' + leftHTML(c) + (view === "day" ? dayMainHTML(viewInfo()) : view === "week" ? weekMainHTML(viewInfo()) : view === "wkplan" ? (WKPM ? WKPM.html(viewInfo()) : '<div id="main" class="pane" style="flex:1">' + mtopHTML(viewInfo(), 1, "") + '<div class="scroll" id="list"><div style="padding:70px 20px;text-align:center;color:var(--sub)">Загружаю «План недели»…</div></div></div>') : view.indexOf("team") === 0 ? teamMainHTML(viewInfo()) : view === "journal" ? journalMainHTML(viewInfo()) : view === "files" ? filesMainHTML(viewInfo()) : view === "food" ? nutriMainHTML(viewInfo()) : view === "notes" ? (NTM ? NTM.html(viewInfo()) : "") : view === "know" ? (KNM ? KNM.html(viewInfo()) : "") : view === "asr" ? (ASRM ? ASRM.html(viewInfo()) : '<div id="main" class="pane" style="flex:1">' + mtopHTML(viewInfo(), 1, "") + '<div class="scroll" id="list"><div style="padding:70px 20px;text-align:center;color:var(--sub)">Загружаю «Расшифровку»…</div></div></div>') : view === "health" ? (HLM ? HLM.html(viewInfo()) : '<div id="main" class="pane" style="flex:1">' + mtopHTML(viewInfo(), 1, "") + '<div class="scroll" id="list"><div style="padding:70px 20px;text-align:center;color:var(--sub)">Загружаю «Здоровье»…</div></div></div>') : mainHTML(items, done, viewInfo())) + (view === "files" ? filesDetailHTML() : selId ? detailHTML(S.tasks[selId]) : "") + "</div>" + (ui.settings ? settingsHTML() : "") + noteFullHTML() + qaHTML() + popHTML() + dsheetHTML() + ritualHTML() + triageHTML() + mvHTML() + trkHTML() + tmeHTML();
 }
 function renderSoon() { if (down) { want = true; return; } render(); }
 function morphKeep(o, n, keep, nk) {
@@ -5472,9 +5473,10 @@ function menuSlideOpen() {
 function render() {
   want = false;
   if (ui.mv && !ui.mv.busy) { try { mvRead(); } catch (e) {} }   // правки в окне переноса не теряются при фоновых перерисовках
-  if (isLite()) { if (view === "journal" || view === "food" || view === "notes" || view === "know" || view === "health" || view === "asr" || view.indexOf("team") === 0) view = "all"; if (ui.trk) ui.trk = false; }
+  if (isLite()) { if (view === "journal" || view === "food" || view === "notes" || view === "know" || view === "health" || view === "asr" || view === "wkplan" || view.indexOf("team") === 0) view = "all"; if (ui.trk) ui.trk = false; }
   try { updBadge(); } catch (e) {}
   if (view === "health" && !HLM) loadHealth();
+  if (view === "wkplan" && !WKPM) loadWkplan();
   if (view === "asr" && !ASRM) loadAsr();
   const app = $("app"); if (!app) return;
   const ae = document.activeElement, fid = ae && ae.id && app.contains(ae) ? ae.id : null;
@@ -7541,6 +7543,13 @@ function loadHealth() {
   const ok = () => { try { HLM = window.HEALTH_INIT({ S, ic, esc, $, render, toast, mtopHTML, uid, todayISO, addDays, parseISO, pad2, WDS, acts, mdOk, ai: aiCall, sb: () => sb, view: () => view }); } catch (e) { console.error(e); toast("Не удалось открыть «Здоровье»"); } hlLoading = false; render(); };
   if (window.HEALTH_INIT) return ok();
   const sc = document.createElement("script"); sc.src = "health.js"; sc.onload = ok; sc.onerror = () => { hlLoading = false; toast("Нет связи: «Здоровье» не загрузилось"); }; document.head.appendChild(sc);
+}
+let WKPM = null, wkpLoading = false;   // «План недели» — лениво, отдельный файл weekplan.js
+function loadWkplan() {
+  if (wkpLoading || WKPM) return; wkpLoading = true;
+  const ok = () => { try { WKPM = window.WKP_INIT({ S, ic, esc, render, toast, mtopHTML, upd, addTask, isoAt, dayOf, minOf, wkMon, todayISO, addDays, parseISO, pad2, acts, view: () => view }); } catch (e) { console.error(e); toast("Не удалось открыть «План недели»"); } wkpLoading = false; render(); };
+  if (window.WKP_INIT) return ok();
+  const sc = document.createElement("script"); sc.src = "weekplan.js"; sc.onload = ok; sc.onerror = () => { wkpLoading = false; toast("Нет связи: «План недели» не загрузился"); }; document.head.appendChild(sc);
 }
 const KNM = window.KNOW_INIT ? window.KNOW_INIT({ S, ic, esc, $, render, toast, mtopHTML, uid, nowISO, acts, sb: () => sb, view: () => view }) : null;
 const NTM = window.NOTES_INIT ? window.NOTES_INIT({ S, ic, esc, $, render, toast, addTask, micToggle, micOK, mtopHTML, uid, nowISO, todayISO, addDays, parseISO, pad2, WDS, goView, acts, zipStore, utf8, mdOk, rec: () => !!VR, sb: () => sb, view: () => view, sel: id => { selId = id; } }) : null;
